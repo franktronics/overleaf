@@ -24,7 +24,7 @@ services:
             OVERLEAF_SITE_URL: https://overleaf.tenepo.com
             OVERLEAF_NAV_TITLE: Overleaf CE Wilson
             OVERLEAF_ADMIN_EMAIL: contact@franklin-tenepo.com
-        entrypoint: /bin/bash -c "tlmgr update --self && tlmgr install collection-langfrench titlesec microtype csquotes setspace biblatex float booktabs caption enumitem && exec /sbin/my_init"
+        entrypoint: /bin/bash -c "tlmgr update --self && tlmgr install collection-langfrench titlesec microtype csquotes setspace biblatex float booktabs caption enumitem ebgaramond librebaskerville crimson libertinus && exec /sbin/my_init"
         networks:
             - default
             - dokploy-network
