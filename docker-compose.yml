@@ -24,6 +24,37 @@ services:
             OVERLEAF_SITE_URL: https://overleaf.tenepo.com
             OVERLEAF_NAV_TITLE: Overleaf CE Wilson
             OVERLEAF_ADMIN_EMAIL: contact@franklin-tenepo.com
+        entrypoint: >
+            /bin/bash -c "
+            tlmgr update --self &&
+            tlmgr install \
+              collection-langfrench \
+              collection-langgerman \
+              collection-langenglish \
+              collection-latexextra \
+              collection-fontsextra \
+              collection-mathscience \
+              collection-bibtexextra \
+              amsmath amssymb amsfonts \
+              microtype csquotes \
+              biblatex biber logreq xstring \
+              titlesec fancyhdr enumitem \
+              booktabs array float xcolor \
+              geometry hyperref graphicx \
+              tikz pgfplots \
+              listings minted \
+              algorithm2e algorithmicx \
+              siunitx \
+              multirow multicol \
+              caption subcaption \
+              appendix \
+              glossaries glossaries-extra \
+              todonotes \
+              pdfpages \
+              standalone \
+              beamer &&
+            exec /sbin/my_init
+            "
         networks:
             - default
             - dokploy-network
