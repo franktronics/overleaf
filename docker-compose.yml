@@ -24,11 +24,11 @@ services:
             OVERLEAF_SITE_URL: https://overleaf.tenepo.com
             OVERLEAF_NAV_TITLE: Overleaf CE Wilson
             OVERLEAF_ADMIN_EMAIL: contact@franklin-tenepo.com
-            SANDBOXED_COMPILES: 'true'
-            SANDBOXED_COMPILES_HOST_DIR_COMPILES: '/var/lib/overleaf/data/compiles'
-            SANDBOXED_COMPILES_HOST_DIR_OUTPUT: '/var/lib/overleaf/data/output'
-            DOCKER_RUNNER: 'true'
-            SANDBOXED_COMPILES_SIBLING_CONTAINERS: 'true'
+            # SANDBOXED_COMPILES: 'true'
+            # SANDBOXED_COMPILES_HOST_DIR_COMPILES: '/var/lib/overleaf/data/compiles'
+            # SANDBOXED_COMPILES_HOST_DIR_OUTPUT: '/var/lib/overleaf/data/output'
+            # DOCKER_RUNNER: 'true'
+            # SANDBOXED_COMPILES_SIBLING_CONTAINERS: 'true'
 
     mongo:
         restart: always
