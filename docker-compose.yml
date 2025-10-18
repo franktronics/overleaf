@@ -8,8 +8,6 @@ services:
                 condition: service_healthy
             redis:
                 condition: service_started
-        # ports:  # Managed by dokploy
-        #     - "4000:80"
         expose:
             - "80"
         stop_grace_period: 60s
@@ -26,6 +24,9 @@ services:
             OVERLEAF_SITE_URL: https://overleaf.tenepo.com
             OVERLEAF_NAV_TITLE: Overleaf CE Wilson
             OVERLEAF_ADMIN_EMAIL: contact@franklin-tenepo.com
+        networks:
+            - default
+            - dokploy-network
 
     mongo:
         restart: always
@@ -33,7 +34,7 @@ services:
         container_name: mongo
         command: '--replSet overleaf'
         volumes:
-            - ../files/mongo_data:/data/db  # For Dokploy
+            - ../files/mongo_data:/data/db
             - ./bin/shared/mongodb-init-replica-set.js:/docker-entrypoint-initdb.d/mongodb-init-replica-set.js
         environment:
           MONGO_INITDB_DATABASE: sharelatex
@@ -44,6 +45,8 @@ services:
             interval: 10s
             timeout: 10s
             retries: 5
+        networks:
+            - default
 
     redis:
         restart: always
@@ -51,4 +54,12 @@ services:
         container_name: redis
         volumes:
             - ../files/redis_data:/data
-        command: redis-server --appendonly yes  #AOF Permission
+        command: redis-server --appendonly yes
+        networks:
+            - default
+
+networks:
+    dokploy-network:
+        external: true
+    default:
+        driver: bridge
