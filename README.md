@@ -78,4 +78,10 @@ Please see the [CONTRIBUTING](CONTRIBUTING.md) file for information on contribut
 
 The code in this repository is released under the GNU AFFERO GENERAL PUBLIC LICENSE, version 3. A copy can be found in the [`LICENSE`](LICENSE) file.
 
+## Notes
+- create Admin user
+```bash
+docker exec sharelatex /bin/bash -c "cd/var/www/sharelatex; grunt user:create-admin --email=abc@xyz.com"
+```
+
 Copyright (c) Overleaf, 2014-2025.
