@@ -22,7 +22,7 @@ services:
             # - /var/run/docker.sock:/var/run/docker.sock
         environment:
 
-            OVERLEAF_APP_NAME: Overleaf Community Edition
+            OVERLEAF_APP_NAME: Overleaf CE Wilson
 
             OVERLEAF_MONGO_URL: mongodb://mongo/sharelatex
 
@@ -45,7 +45,7 @@ services:
             # OVERLEAF_SITE_URL: http://overleaf.example.com
             OVERLEAF_NAV_TITLE: Overleaf CE Wilson
             # OVERLEAF_HEADER_IMAGE_URL: http://example.com/mylogo.png
-            # OVERLEAF_ADMIN_EMAIL: support@it.com
+            OVERLEAF_ADMIN_EMAIL: contact@franklin-tenepo.com
 
             # OVERLEAF_LEFT_FOOTER: '[{"text": "Another page I want to link to can be found <a href=\"here\">here</a>"} ]'
             # OVERLEAF_RIGHT_FOOTER: '[{"text": "Hello I am on the Right"} ]'
