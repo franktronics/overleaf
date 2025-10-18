@@ -11,7 +11,7 @@ services:
             redis:
                 condition: service_started
         ports:
-            - 80:80
+            - "4000:80"
         stop_grace_period: 60s
         volumes:
             - ~/sharelatex_data:/var/lib/overleaf
@@ -43,7 +43,7 @@ services:
             #VIRTUAL_HOST: 103.112.212.22
 
             # OVERLEAF_SITE_URL: http://overleaf.example.com
-            # OVERLEAF_NAV_TITLE: Overleaf Community Edition
+            OVERLEAF_NAV_TITLE: Overleaf CE Wilson
             # OVERLEAF_HEADER_IMAGE_URL: http://example.com/mylogo.png
             # OVERLEAF_ADMIN_EMAIL: support@it.com
 
