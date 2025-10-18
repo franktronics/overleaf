@@ -8,8 +8,10 @@ services:
                 condition: service_healthy
             redis:
                 condition: service_started
-        ports:
-            - "4000:80"
+        # ports:  # Managed by dokploy
+        #     - "4000:80"
+        expose:
+            - "80"
         stop_grace_period: 60s
         volumes:
             - ../files/sharelatex_data:/var/lib/overleaf
