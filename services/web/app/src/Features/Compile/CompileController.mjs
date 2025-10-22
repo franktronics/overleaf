@@ -12,7 +12,7 @@ import Errors from '../Errors/Errors.js'
 import SessionManager from '../Authentication/SessionManager.js'
 import { RateLimiter } from '../../infrastructure/RateLimiter.js'
 import Validation from '../../infrastructure/Validation.js'
-import ClsiCookieManagerFactory from './ClsiCookieManager.js'
+import ClsiCookieManagerFactory from './ClsiCookieManager.mjs'
 import Path from 'node:path'
 import AnalyticsManager from '../Analytics/AnalyticsManager.js'
 import SplitTestHandler from '../SplitTests/SplitTestHandler.js'
@@ -73,8 +73,19 @@ async function _getSplitTestOptions(req, res) {
       res,
       'populate-clsi-cache'
     )
-  const populateClsiCache = populateClsiCacheVariant === 'enabled'
+  let populateClsiCache = populateClsiCacheVariant === 'enabled'
   const compileFromClsiCache = populateClsiCache // use same split-test
+
+  if (!populateClsiCache) {
+    // Pre-populate the cache for the users in the split-test for prompts.
+    // Keep the compile from cache disabled for now.
+    const { variant } = await SplitTestHandler.promises.getAssignment(
+      editorReq,
+      res,
+      'populate-clsi-cache-for-prompt'
+    )
+    populateClsiCache = variant === 'enabled'
+  }
 
   const pdfDownloadDomain = Settings.pdfDownloadDomain
 
