@@ -69,8 +69,8 @@ export type CompileResponseData = {
   pdfDownloadDomain?: string
   pdfCachingMinChunkSize: number
   validationProblems: any
-  stats: any
-  timings: any
+  stats?: Record<string, number>
+  timings?: Record<string, number>
   outputFilesArchive?: CompileOutputFile
 
   // assigned on response body by DocumentCompiler in frontend

@@ -4,33 +4,34 @@ import moment from 'moment'
 
 import Metrics from '@overleaf/metrics'
 import Settings from '@overleaf/settings'
-import ProjectHelper from './ProjectHelper.js'
-import ProjectGetter from './ProjectGetter.js'
+import ProjectHelper from './ProjectHelper.mjs'
+import ProjectGetter from './ProjectGetter.mjs'
 import PrivilegeLevels from '../Authorization/PrivilegeLevels.js'
-import SessionManager from '../Authentication/SessionManager.js'
-import Sources from '../Authorization/Sources.js'
-import UserGetter from '../User/UserGetter.js'
+import SessionManager from '../Authentication/SessionManager.mjs'
+import Sources from '../Authorization/Sources.mjs'
+import UserGetter from '../User/UserGetter.mjs'
 import SurveyHandler from '../Survey/SurveyHandler.mjs'
-import TagsHandler from '../Tags/TagsHandler.js'
+import TagsHandler from '../Tags/TagsHandler.mjs'
 import { expressify } from '@overleaf/promise-utils'
 import logger from '@overleaf/logger'
 import Features from '../../infrastructure/Features.js'
 import SubscriptionViewModelBuilder from '../Subscription/SubscriptionViewModelBuilder.mjs'
-import NotificationsHandler from '../Notifications/NotificationsHandler.js'
+import NotificationsHandler from '../Notifications/NotificationsHandler.mjs'
 import Modules from '../../infrastructure/Modules.js'
 import { OError, V1ConnectionError } from '../Errors/Errors.js'
-import { User } from '../../models/User.js'
+import { User } from '../../models/User.mjs'
 import UserPrimaryEmailCheckHandler from '../User/UserPrimaryEmailCheckHandler.mjs'
 import UserController from '../User/UserController.mjs'
-import NotificationsBuilder from '../Notifications/NotificationsBuilder.js'
+import NotificationsBuilder from '../Notifications/NotificationsBuilder.mjs'
 import GeoIpLookup from '../../infrastructure/GeoIpLookup.mjs'
-import SplitTestHandler from '../SplitTests/SplitTestHandler.js'
-import SplitTestSessionHandler from '../SplitTests/SplitTestSessionHandler.js'
+import SplitTestHandler from '../SplitTests/SplitTestHandler.mjs'
+import SplitTestSessionHandler from '../SplitTests/SplitTestSessionHandler.mjs'
 import TutorialHandler from '../Tutorial/TutorialHandler.mjs'
-import SubscriptionHelper from '../Subscription/SubscriptionHelper.js'
+import SubscriptionHelper from '../Subscription/SubscriptionHelper.mjs'
 import PermissionsManager from '../Authorization/PermissionsManager.mjs'
-import AnalyticsManager from '../Analytics/AnalyticsManager.js'
-import { OnboardingDataCollection } from '../../models/OnboardingDataCollection.js'
+import AnalyticsManager from '../Analytics/AnalyticsManager.mjs'
+import { OnboardingDataCollection } from '../../models/OnboardingDataCollection.mjs'
+import UserSettingsHelper from './UserSettingsHelper.mjs'
 
 /**
  * @import { GetProjectsRequest, GetProjectsResponse, AllUsersProjects, MongoProject, FormattedProject, MongoTag } from "./types"
@@ -164,7 +165,7 @@ async function projectListPage(req, res, next) {
   })
   const user = await User.findById(
     userId,
-    `email emails features alphaProgram betaProgram lastPrimaryEmailCheck lastActive signUpDate refProviders${
+    `email emails features alphaProgram betaProgram lastPrimaryEmailCheck lastActive signUpDate ace refProviders${
       isSaas ? ' enrollment writefull completedTutorials aiErrorAssistant' : ''
     }`
   )
@@ -398,7 +399,7 @@ async function projectListPage(req, res, next) {
   if (Settings.overleaf != null && req.ip !== user.lastLoginIp) {
     try {
       await NotificationsBuilder.promises
-        .ipMatcherAffiliation(user._id)
+        .ipMatcherAffiliation(user._id.toString())
         .create(req.ip)
     } catch (err) {
       logger.error(
@@ -444,7 +445,6 @@ async function projectListPage(req, res, next) {
     _.sample(['on-premise', 'FOMO', 'FOMO', 'FOMO'])
 
   let showInrGeoBanner = false
-  let showBrlGeoBanner = false
   let showLATAMBanner = false
   let recommendedCurrency
 
@@ -458,7 +458,6 @@ async function projectListPage(req, res, next) {
     if (countryCode === 'IN') {
       showInrGeoBanner = true
     }
-    showBrlGeoBanner = countryCode === 'BR'
 
     showLATAMBanner = ['MX', 'CO', 'CL', 'PE'].includes(countryCode)
     // LATAM Banner needs to know which currency to display
@@ -537,6 +536,12 @@ async function projectListPage(req, res, next) {
     }
   }
 
+  await SplitTestHandler.promises.getAssignment(
+    req,
+    res,
+    'themed-project-dashboard'
+  )
+
   res.render('project/list-react', {
     title: 'your_projects',
     usersBestSubscription,
@@ -545,6 +550,7 @@ async function projectListPage(req, res, next) {
     user,
     userAffiliations,
     userEmails,
+    userSettings: UserSettingsHelper.buildUserSettings(user),
     reconfirmedViaSAML,
     allInReconfirmNotificationPeriods,
     survey,
@@ -558,7 +564,6 @@ async function projectListPage(req, res, next) {
     showLATAMBanner,
     recommendedCurrency,
     showInrGeoBanner,
-    showBrlGeoBanner,
     projectDashboardReact: true, // used in navbar
     groupSsoSetupSuccess,
     joinedGroupName,

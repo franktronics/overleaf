@@ -21,7 +21,6 @@ import {
   showFileErrorToast,
   showSynctexRequestErrorToast,
 } from '@/features/pdf-preview/components/synctex-toasts'
-import { sendMB } from '@/infrastructure/event-tracking'
 
 export default function useSynctex(): {
   syncToPdf: () => void
@@ -121,12 +120,6 @@ export default function useSynctex(): {
         .then(data => {
           setShowLogs(false)
           setHighlights(data.pdf)
-          if (data.downloadedFromCache) {
-            sendMB('synctex-downloaded-from-cache', {
-              projectId,
-              method: 'code',
-            })
-          }
         })
         .catch(error => {
           showSynctexRequestErrorToast()
@@ -235,12 +228,6 @@ export default function useSynctex(): {
         .then(data => {
           const [{ file, line }] = data.code
           goToCodeLine(file, line, selectText)
-          if (data.downloadedFromCache) {
-            sendMB('synctex-downloaded-from-cache', {
-              projectId,
-              method: 'pdf',
-            })
-          }
         })
         .catch(error => {
           debugConsole.error(error)

@@ -6,51 +6,54 @@ import pProps from 'p-props'
 import logger from '@overleaf/logger'
 import { expressify } from '@overleaf/promise-utils'
 import mongodb from 'mongodb-legacy'
-import ProjectDeleter from './ProjectDeleter.js'
+import ProjectDeleter from './ProjectDeleter.mjs'
 import ProjectDuplicator from './ProjectDuplicator.mjs'
-import ProjectCreationHandler from './ProjectCreationHandler.js'
-import EditorController from '../Editor/EditorController.js'
-import ProjectHelper from './ProjectHelper.js'
+import ProjectCreationHandler from './ProjectCreationHandler.mjs'
+import EditorController from '../Editor/EditorController.mjs'
+import ProjectHelper from './ProjectHelper.mjs'
 import metrics from '@overleaf/metrics'
-import { User } from '../../models/User.js'
-import SubscriptionLocator from '../Subscription/SubscriptionLocator.js'
-import { isPaidSubscription } from '../Subscription/SubscriptionHelper.js'
-import LimitationsManager from '../Subscription/LimitationsManager.js'
+import { User } from '../../models/User.mjs'
+import SubscriptionLocator from '../Subscription/SubscriptionLocator.mjs'
+import SubscriptionHelper from '../Subscription/SubscriptionHelper.mjs'
+import LimitationsManager from '../Subscription/LimitationsManager.mjs'
 import Settings from '@overleaf/settings'
-import AuthorizationManager from '../Authorization/AuthorizationManager.js'
+import AuthorizationManager from '../Authorization/AuthorizationManager.mjs'
 import InactiveProjectManager from '../InactiveData/InactiveProjectManager.mjs'
-import ProjectUpdateHandler from './ProjectUpdateHandler.js'
-import ProjectGetter from './ProjectGetter.js'
+import ProjectUpdateHandler from './ProjectUpdateHandler.mjs'
+import ProjectGetter from './ProjectGetter.mjs'
 import PrivilegeLevels from '../Authorization/PrivilegeLevels.js'
-import SessionManager from '../Authentication/SessionManager.js'
-import Sources from '../Authorization/Sources.js'
-import TokenAccessHandler from '../TokenAccess/TokenAccessHandler.js'
-import CollaboratorsGetter from '../Collaborators/CollaboratorsGetter.js'
-import ProjectEntityHandler from './ProjectEntityHandler.js'
-import TpdsProjectFlusher from '../ThirdPartyDataStore/TpdsProjectFlusher.js'
+import SessionManager from '../Authentication/SessionManager.mjs'
+import Sources from '../Authorization/Sources.mjs'
+import TokenAccessHandler from '../TokenAccess/TokenAccessHandler.mjs'
+import CollaboratorsGetter from '../Collaborators/CollaboratorsGetter.mjs'
+import ProjectEntityHandler from './ProjectEntityHandler.mjs'
+import TpdsProjectFlusher from '../ThirdPartyDataStore/TpdsProjectFlusher.mjs'
 import Features from '../../infrastructure/Features.js'
 import BrandVariationsHandler from '../BrandVariations/BrandVariationsHandler.mjs'
 import UserController from '../User/UserController.mjs'
-import AnalyticsManager from '../Analytics/AnalyticsManager.js'
-import SplitTestHandler from '../SplitTests/SplitTestHandler.js'
-import SplitTestSessionHandler from '../SplitTests/SplitTestSessionHandler.js'
-import FeaturesUpdater from '../Subscription/FeaturesUpdater.js'
+import AnalyticsManager from '../Analytics/AnalyticsManager.mjs'
+import SplitTestHandler from '../SplitTests/SplitTestHandler.mjs'
+import SplitTestSessionHandler from '../SplitTests/SplitTestSessionHandler.mjs'
+import FeaturesUpdater from '../Subscription/FeaturesUpdater.mjs'
 import SpellingHandler from '../Spelling/SpellingHandler.mjs'
-import { hasAdminAccess } from '../Helpers/AdminAuthorizationHelper.js'
-import InstitutionsFeatures from '../Institutions/InstitutionsFeatures.js'
+import AdminAuthorizationHelper from '../Helpers/AdminAuthorizationHelper.mjs'
+import InstitutionsFeatures from '../Institutions/InstitutionsFeatures.mjs'
 import InstitutionsGetter from '../Institutions/InstitutionsGetter.mjs'
 import ProjectAuditLogHandler from './ProjectAuditLogHandler.mjs'
-import PublicAccessLevels from '../Authorization/PublicAccessLevels.js'
-import TagsHandler from '../Tags/TagsHandler.js'
+import PublicAccessLevels from '../Authorization/PublicAccessLevels.mjs'
+import TagsHandler from '../Tags/TagsHandler.mjs'
 import TutorialHandler from '../Tutorial/TutorialHandler.mjs'
-import UserUpdater from '../User/UserUpdater.js'
+import UserUpdater from '../User/UserUpdater.mjs'
 import Modules from '../../infrastructure/Modules.js'
 import { z, zz, validateReq } from '../../infrastructure/Validation.js'
-import UserGetter from '../User/UserGetter.js'
+import UserGetter from '../User/UserGetter.mjs'
 import { isStandaloneAiAddOnPlanCode } from '../Subscription/AiHelper.js'
 import SubscriptionController from '../Subscription/SubscriptionController.mjs'
 import { formatCurrency } from '../../util/currency.js'
+import UserSettingsHelper from './UserSettingsHelper.mjs'
 
+const { isPaidSubscription } = SubscriptionHelper
+const { hasAdminAccess } = AdminAuthorizationHelper
 const { ObjectId } = mongodb
 /**
  * @import { GetProjectsRequest, GetProjectsResponse, Project } from "./types"
@@ -166,7 +169,12 @@ const _ProjectController = {
       deleterUser: user,
       ipAddress: req.ip,
     })
-
+    ProjectAuditLogHandler.addEntryIfManagedInBackground(
+      projectId,
+      'project-deleted',
+      user._id,
+      req.ip
+    )
     res.sendStatus(200)
   },
 
@@ -174,6 +182,12 @@ const _ProjectController = {
     const projectId = req.params.Project_id
     const userId = SessionManager.getLoggedInUserId(req.session)
     await ProjectDeleter.promises.archiveProject(projectId, userId)
+    ProjectAuditLogHandler.addEntryIfManagedInBackground(
+      projectId,
+      'project-archived',
+      userId,
+      req.ip
+    )
     res.sendStatus(200)
   },
 
@@ -181,6 +195,12 @@ const _ProjectController = {
     const projectId = req.params.Project_id
     const userId = SessionManager.getLoggedInUserId(req.session)
     await ProjectDeleter.promises.unarchiveProject(projectId, userId)
+    ProjectAuditLogHandler.addEntryIfManagedInBackground(
+      projectId,
+      'project-unarchived',
+      userId,
+      req.ip
+    )
     res.sendStatus(200)
   },
 
@@ -188,6 +208,12 @@ const _ProjectController = {
     const projectId = req.params.project_id
     const userId = SessionManager.getLoggedInUserId(req.session)
     await ProjectDeleter.promises.trashProject(projectId, userId)
+    ProjectAuditLogHandler.addEntryIfManagedInBackground(
+      projectId,
+      'project-trashed',
+      userId,
+      req.ip
+    )
     res.sendStatus(200)
   },
 
@@ -195,6 +221,12 @@ const _ProjectController = {
     const projectId = req.params.project_id
     const userId = SessionManager.getLoggedInUserId(req.session)
     await ProjectDeleter.promises.untrashProject(projectId, userId)
+    ProjectAuditLogHandler.addEntryIfManagedInBackground(
+      projectId,
+      'project-untrashed',
+      userId,
+      req.ip
+    )
     res.sendStatus(200)
   },
 
@@ -210,8 +242,15 @@ const _ProjectController = {
   },
 
   async restoreProject(req, res) {
+    const user = SessionManager.getLoggedInUserId(req.session)
     const projectId = req.params.Project_id
     await ProjectDeleter.promises.restoreProject(projectId)
+    ProjectAuditLogHandler.addEntryIfManagedInBackground(
+      projectId,
+      'project-restored',
+      user._id,
+      req.ip
+    )
     res.sendStatus(200)
   },
 
@@ -232,6 +271,12 @@ const _ProjectController = {
         projectId,
         projectName,
         tags
+      )
+      ProjectAuditLogHandler.addEntryIfManagedInBackground(
+        projectId,
+        'project-cloned',
+        currentUser._id,
+        req.ip
       )
       res.json({
         name: project.name,
@@ -272,6 +317,13 @@ const _ProjectController = {
           projectName
         )
       : ProjectCreationHandler.promises.createBasicProject(userId, projectName))
+
+    ProjectAuditLogHandler.addEntryIfManagedInBackground(
+      project._id,
+      'project-created',
+      project.owner_ref,
+      req.ip
+    )
 
     res.json({
       project_id: project._id,
@@ -383,7 +435,6 @@ const _ProjectController = {
       'visual-preview',
       'external-socket-heartbeat',
       'null-test-share-modal',
-      'populate-clsi-cache',
       'pdf-caching-cached-url-lookup',
       'pdf-caching-mode',
       'pdf-caching-prefetch-large',
@@ -398,10 +449,12 @@ const _ProjectController = {
       'overleaf-assist-bundle',
       'word-count-client',
       'editor-popup-ux-survey',
-      'client-side-references',
       'editor-redesign-new-users',
       'writefull-frontend-migration',
       'chat-edit-delete',
+      'compile-timeout-remove-info',
+      'ai-workbench',
+      'compile-timeout-target-plans',
     ].filter(Boolean)
 
     const getUserValues = async userId =>
@@ -436,7 +489,10 @@ const _ProjectController = {
           affiliations: InstitutionsGetter.promises
             .getCurrentAffiliations(userId)
             .catch(err => {
-              logger.error({ err, userId }, 'failed to get institution licence')
+              logger.error(
+                { err, userId },
+                'failed to get current affiliations'
+              )
               return false
             }),
           subscription:
@@ -452,17 +508,10 @@ const _ProjectController = {
             ),
         })
       )
-    const splitTestAssignments = {}
 
     try {
       const responses = await pProps({
         userValues: userId ? getUserValues(userId) : defaultUserValues(),
-        splitTestAssignments: Promise.all(
-          splitTests.map(async splitTest => {
-            splitTestAssignments[splitTest] =
-              await SplitTestHandler.promises.getAssignment(req, res, splitTest)
-          })
-        ),
         project: ProjectGetter.promises.getProject(projectId, {
           name: 1,
           lastUpdated: 1,
@@ -502,7 +551,29 @@ const _ProjectController = {
         subscription,
         isTokenMember,
         isInvitedMember,
+        affiliations,
       } = userValues
+
+      let inEnterpriseCommons = false
+      for (const affiliation of affiliations || []) {
+        inEnterpriseCommons =
+          inEnterpriseCommons || affiliation.institution?.enterpriseCommons
+      }
+
+      const getSplitTestAssignment = async splitTest => {
+        return await SplitTestHandler.promises.getAssignment(
+          req,
+          res,
+          splitTest
+        )
+      }
+      const splitTestAssignments = {}
+      await Promise.all(
+        splitTests.map(async splitTest => {
+          splitTestAssignments[splitTest] =
+            await getSplitTestAssignment(splitTest)
+        })
+      )
 
       const brandVariation = project?.brandVariationId
         ? await BrandVariationsHandler.promises.getBrandVariationById(
@@ -767,6 +838,19 @@ const _ProjectController = {
         isOverleafAssistBundleEnabled &&
         (await ProjectController._getAddonPrices(req, res))
 
+      let standardPlanPricing
+      let recommendedCurrency
+      if (Features.hasFeature('saas')) {
+        standardPlanPricing = await ProjectController._getPlanPricing(
+          req,
+          res,
+          'collaborator'
+        )
+        const { currency } =
+          await SubscriptionController.getRecommendedCurrency(req, res)
+        recommendedCurrency = currency
+      }
+
       let planCode = subscription?.planCode
       if (!planCode && !userInNonIndividualSub) {
         planCode = 'personal'
@@ -774,13 +858,20 @@ const _ProjectController = {
 
       const planDetails = Settings.plans.find(p => p.planCode === planCode)
 
+      const shouldLoadHotjar =
+        splitTestAssignments['compile-timeout-target-plans']?.variant ===
+          'enabled' &&
+        !userHasPremiumSub &&
+        !userInNonIndividualSub
+
       res.render(template, {
         title: project.name,
         priority_title: true,
         bodyClasses: ['editor'],
         project_id: project._id,
         projectName: project.name,
-        projectOwnerHasPremiumOnPageLoad:
+        canUseClsiCache:
+          Features.hasFeature('saas') &&
           ownerFeatures?.compileGroup === 'priority',
         user: {
           id: userId,
@@ -811,22 +902,7 @@ const _ProjectController = {
           isMemberOfGroupSubscription: userIsMemberOfGroupSubscription,
           hasInstitutionLicence: userHasInstitutionLicence,
         },
-        userSettings: {
-          mode: user.ace.mode,
-          editorTheme: user.ace.theme,
-          fontSize: user.ace.fontSize,
-          autoComplete: user.ace.autoComplete,
-          autoPairDelimiters: user.ace.autoPairDelimiters,
-          pdfViewer: user.ace.pdfViewer,
-          syntaxValidation: user.ace.syntaxValidation,
-          fontFamily: user.ace.fontFamily || 'lucida',
-          lineHeight: user.ace.lineHeight || 'normal',
-          overallTheme: user.ace.overallTheme,
-          mathPreview: user.ace.mathPreview,
-          breadcrumbs: user.ace.breadcrumbs,
-          referencesSearchMode: user.ace.referencesSearchMode,
-          enableNewEditor: user.ace.enableNewEditor ?? true,
-        },
+        userSettings: UserSettingsHelper.buildUserSettings(user),
         labsExperiments: user.labsExperiments ?? [],
         privilegeLevel,
         anonymous,
@@ -867,13 +943,15 @@ const _ProjectController = {
         otMigrationStage: project.overleaf?.history?.otMigrationStage ?? 0,
         projectTags,
         isSaas: Features.hasFeature('saas'),
-        shouldLoadHotjar: splitTestAssignments.hotjar?.variant === 'enabled',
+        shouldLoadHotjar,
         isOverleafAssistBundleEnabled,
         customerIoEnabled,
         addonPrices,
         compileSettings: {
           compileTimeout: ownerFeatures?.compileTimeout,
         },
+        standardPlanPricing,
+        recommendedCurrency,
       })
       timer.done()
     } catch (err) {
@@ -882,30 +960,33 @@ const _ProjectController = {
     }
   },
 
-  async _getPaywallPlansPrices(
-    req,
-    res,
-    paywallPlans = ['collaborator', 'student']
-  ) {
-    const plansData = {}
-
+  async _getPlanPricing(req, res, plan = 'collaborator') {
     const locale = req.i18n.language
     const { currency } = await SubscriptionController.getRecommendedCurrency(
       req,
       res
     )
 
-    paywallPlans.forEach(plan => {
-      const planPrice = Settings.localizedPlanPricing[currency][plan].monthly
-      const formattedPlanPrice = formatCurrency(
-        planPrice,
+    const pricingForCurrency = Settings.localizedPlanPricing[currency]
+    if (!pricingForCurrency) {
+      return null
+    }
+
+    const planPricing = pricingForCurrency[plan]
+    if (!planPricing) {
+      return null
+    }
+
+    return {
+      monthly: formatCurrency(planPricing.monthly, currency, locale, true),
+      annual: formatCurrency(planPricing.annual, currency, locale, true),
+      monthlyTimesTwelve: formatCurrency(
+        planPricing.monthlyTimesTwelve,
         currency,
         locale,
         true
-      )
-      plansData[plan] = formattedPlanPrice
-    })
-    return plansData
+      ),
+    }
   },
 
   async _getAddonPrices(req, res, addonPlans = ['assistant']) {
@@ -1139,12 +1220,15 @@ const _ProjectController = {
     aiFeaturesAllowed,
     userIsMemberOfGroupSubscription
   ) {
-    let inEnterpriseCommons = false
-    const affiliations = userValues.affiliations || []
-    for (const affiliation of affiliations) {
-      inEnterpriseCommons =
-        inEnterpriseCommons || affiliation.institution?.enterpriseCommons
-    }
+    const affiliations = userValues.affiliations
+    const affiliateLookupFailed = affiliations === false
+
+    // if affiliations is specifically false instead of empty, we know the affiliate lookup failed, and should defer to blocking auto-loading
+    const inEnterpriseCommons =
+      affiliateLookupFailed ||
+      affiliations.some(
+        affiliation => affiliation.institution?.enterpriseCommons
+      )
 
     // check if a user has never tried writefull before (writefull.enabled will be null)
     //  if they previously accepted writefull, or are have been already assigned to a trial, user.writefull will be true,
@@ -1209,6 +1293,7 @@ const defaultUserValues = () => ({
   learnedWords: [],
   projectTags: [],
   userHasInstitutionLicence: false,
+  affiliations: [],
   subscription: undefined,
   isTokenMember: false,
   isInvitedMember: false,
@@ -1286,7 +1371,7 @@ const ProjectController = {
   _injectProjectUsers: _ProjectController._injectProjectUsers,
   _isInPercentageRollout: _ProjectController._isInPercentageRollout,
   _refreshFeatures: _ProjectController._refreshFeatures,
-  _getPaywallPlansPrices: _ProjectController._getPaywallPlansPrices,
+  _getPlanPricing: _ProjectController._getPlanPricing,
   _getAddonPrices: _ProjectController._getAddonPrices,
   _setWritefullTrialState: _ProjectController._setWritefullTrialState,
 }

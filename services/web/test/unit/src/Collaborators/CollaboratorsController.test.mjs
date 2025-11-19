@@ -88,14 +88,14 @@ describe('CollaboratorsController', function () {
     }))
 
     vi.doMock(
-      '../../../../app/src/Features/Collaborators/CollaboratorsHandler.js',
+      '../../../../app/src/Features/Collaborators/CollaboratorsHandler.mjs',
       () => ({
         default: ctx.CollaboratorsHandler,
       })
     )
 
     vi.doMock(
-      '../../../../app/src/Features/Collaborators/CollaboratorsGetter.js',
+      '../../../../app/src/Features/Collaborators/CollaboratorsGetter.mjs',
       () => ({
         default: ctx.CollaboratorsGetter,
       })
@@ -116,25 +116,25 @@ describe('CollaboratorsController', function () {
     )
 
     vi.doMock(
-      '../../../../app/src/Features/Errors/HttpErrorHandler.js',
+      '../../../../app/src/Features/Errors/HttpErrorHandler.mjs',
       () => ({
         default: ctx.HttpErrorHandler,
       })
     )
 
-    vi.doMock('../../../../app/src/Features/Tags/TagsHandler.js', () => ({
+    vi.doMock('../../../../app/src/Features/Tags/TagsHandler.mjs', () => ({
       default: ctx.TagsHandler,
     }))
 
     vi.doMock(
-      '../../../../app/src/Features/Authentication/SessionManager.js',
+      '../../../../app/src/Features/Authentication/SessionManager.mjs',
       () => ({
         default: ctx.SessionManager,
       })
     )
 
     vi.doMock(
-      '../../../../app/src/Features/TokenAccess/TokenAccessHandler.js',
+      '../../../../app/src/Features/TokenAccess/TokenAccessHandler.mjs',
       () => ({
         default: ctx.TokenAccessHandler,
       })
@@ -147,19 +147,19 @@ describe('CollaboratorsController', function () {
       })
     )
 
-    vi.doMock('../../../../app/src/Features/Project/ProjectGetter.js', () => ({
+    vi.doMock('../../../../app/src/Features/Project/ProjectGetter.mjs', () => ({
       default: ctx.ProjectGetter,
     }))
 
     vi.doMock(
-      '../../../../app/src/Features/SplitTests/SplitTestHandler.js',
+      '../../../../app/src/Features/SplitTests/SplitTestHandler.mjs',
       () => ({
         default: ctx.SplitTestHandler,
       })
     )
 
     vi.doMock(
-      '../../../../app/src/Features/Subscription/LimitationsManager.js',
+      '../../../../app/src/Features/Subscription/LimitationsManager.mjs',
       () => ({
         default: ctx.LimitationsManager,
       })
@@ -476,13 +476,10 @@ describe('CollaboratorsController', function () {
     })
 
     it('returns 204 on success', async function (ctx) {
-      await new Promise(resolve => {
-        ctx.res.sendStatus = status => {
-          expect(status).to.equal(204)
-          resolve()
-        }
-        ctx.CollaboratorsController.transferOwnership(ctx.req, ctx.res)
-      })
+      ctx.res.sendStatus = vi.fn()
+
+      await ctx.CollaboratorsController.transferOwnership(ctx.req, ctx.res)
+      expect(ctx.res.sendStatus).toHaveBeenCalledWith(204)
     })
 
     it('returns 404 if the project does not exist', async function (ctx) {

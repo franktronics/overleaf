@@ -1,4 +1,4 @@
-import { useTranslation } from 'react-i18next'
+import { Trans, useTranslation } from 'react-i18next'
 import ContactSupport from './contact-support-for-custom-subscription'
 import GroupSubscriptionMemberships from './group-subscription-memberships'
 import InstitutionMemberships from './institution-memberships'
@@ -28,6 +28,9 @@ function SubscriptionDashboard() {
 
   const hasAiAssistViaWritefull = getMeta('ol-hasAiAssistViaWritefull')
   const fromPlansPage = getMeta('ol-fromPlansPage')
+  const hasRedirectedPaymentError = Boolean(
+    getMeta('ol-subscriptionPaymentErrorCode')
+  )
 
   return (
     <div className="container">
@@ -41,10 +44,26 @@ function SubscriptionDashboard() {
               type="warning"
             />
           )}
+          {hasRedirectedPaymentError && (
+            <OLNotification
+              className="mb-4"
+              aria-live="polite"
+              content={
+                <Trans
+                  i18nKey="payment_error_generic"
+                  components={[
+                    /* eslint-disable-next-line jsx-a11y/anchor-has-content, react/jsx-key */
+                    <a href="/contact" target="_blank" />,
+                  ]}
+                />
+              }
+              type="error"
+            />
+          )}
           <RedirectAlerts />
           <OLPageContentCard>
             <div className="page-header">
-              <h1>{t('your_subscription')}</h1>
+              <h1>{t('your_subscriptions')}</h1>
             </div>
 
             <div>

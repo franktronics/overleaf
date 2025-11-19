@@ -33,12 +33,12 @@ describe('ProjectHistoryHandler', function () {
       default: (ctx.Settings = {}),
     }))
 
-    vi.doMock('../../../../app/src/models/Project.js', () => ({
+    vi.doMock('../../../../app/src/models/Project.mjs', () => ({
       Project: ctx.ProjectModel,
     }))
 
     vi.doMock(
-      '../../../../app/src/Features/Project/ProjectDetailsHandler.js',
+      '../../../../app/src/Features/Project/ProjectDetailsHandler.mjs',
       () => ({
         default: (ctx.ProjectDetailsHandler = {
           promises: {},
@@ -46,11 +46,14 @@ describe('ProjectHistoryHandler', function () {
       })
     )
 
-    vi.doMock('../../../../app/src/Features/History/HistoryManager.js', () => ({
-      default: (ctx.HistoryManager = {
-        promises: {},
-      }),
-    }))
+    vi.doMock(
+      '../../../../app/src/Features/History/HistoryManager.mjs',
+      () => ({
+        default: (ctx.HistoryManager = {
+          promises: {},
+        }),
+      })
+    )
 
     vi.doMock(
       '../../../../app/src/Features/Project/ProjectEntityUpdateHandler',

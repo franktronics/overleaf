@@ -7,8 +7,8 @@ import {
   RequestFailedError,
 } from '@overleaf/fetch-utils'
 import Settings from '@overleaf/settings'
-import ProjectGetter from '../Project/ProjectGetter.js'
-import ProjectEntityHandler from '../Project/ProjectEntityHandler.js'
+import ProjectGetter from '../Project/ProjectGetter.mjs'
+import ProjectEntityHandler from '../Project/ProjectEntityHandler.mjs'
 import logger from '@overleaf/logger'
 import OError from '@overleaf/o-error'
 import { Cookie } from 'tough-cookie'
@@ -16,13 +16,13 @@ import ClsiCookieManagerFactory from './ClsiCookieManager.mjs'
 import ClsiStateManager from './ClsiStateManager.mjs'
 import _ from 'lodash'
 import ClsiFormatChecker from './ClsiFormatChecker.mjs'
-import DocumentUpdaterHandler from '../DocumentUpdater/DocumentUpdaterHandler.js'
+import DocumentUpdaterHandler from '../DocumentUpdater/DocumentUpdaterHandler.mjs'
 import Metrics from '@overleaf/metrics'
 import Errors from '../Errors/Errors.js'
-import ClsiCacheHandler from './ClsiCacheHandler.js'
-import HistoryManager from '../History/HistoryManager.js'
-import SplitTestHandler from '../SplitTests/SplitTestHandler.js'
-import AnalyticsManager from '../Analytics/AnalyticsManager.js'
+import ClsiCacheHandler from './ClsiCacheHandler.mjs'
+import HistoryManager from '../History/HistoryManager.mjs'
+import SplitTestHandler from '../SplitTests/SplitTestHandler.mjs'
+import AnalyticsManager from '../Analytics/AnalyticsManager.mjs'
 
 const ClsiCookieManager = ClsiCookieManagerFactory(
   Settings.apis.clsi?.backendGroupName
@@ -51,6 +51,10 @@ function getNewCompileBackendClass(projectId, compileBackendClass) {
     case 'n2d':
       return 'n4'
     case 'c2d':
+      return 'n4'
+    case 'c3d':
+      return 'n4'
+    case 'c4d':
       return 'n4'
     default:
       throw new Error('unknown ?compileBackendClass')

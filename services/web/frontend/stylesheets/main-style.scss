@@ -1,5 +1,6 @@
 // Web fonts
 @import '../fonts/noto-sans/noto-sans.css';
+@import '../fonts/inter/inter.css';
 @import '../fonts/dm-mono/dm-mono.css';
 @import '../fonts/merriweather/merriweather.css';
 @import '../fonts/source-code-pro/source-code-pro.css';
@@ -49,3 +50,6 @@
 // Module styles
 // TODO: find a way for modules to add styles dynamically
 @import 'modules/all';
+
+// DS unified access styles
+@import 'ciam/all';

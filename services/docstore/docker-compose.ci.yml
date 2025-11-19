@@ -57,7 +57,7 @@ services:
     user: root
   mongo:
     image: mongo:8.0.11
-    command: --replSet overleaf
+    command: --replSet overleaf --notablescan
     volumes:
       - ../../bin/shared/mongodb-init-replica-set.js:/docker-entrypoint-initdb.d/mongodb-init-replica-set.js
       - ../../bin/shared/mongodb-docker-entrypoint-wait.sh:/mongodb-docker-entrypoint-wait.sh
@@ -70,8 +70,8 @@ services:
       # starting up mongo.
       - mongo:127.0.0.1
   gcs:
-    image: fsouza/fake-gcs-server:1.45.2
-    command: ["--port=9090", "--scheme=http"]
+    image: fsouza/fake-gcs-server:1.52.3
+    command: ["--port=9090", "--scheme=http", "--external-url=http://gcs:9090"]
     healthcheck:
       test: wget --quiet --output-document=/dev/null http://localhost:9090/storage/v1/b
       interval: 1s

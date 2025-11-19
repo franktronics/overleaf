@@ -50,7 +50,6 @@ import {
   LogEntry,
   PdfFileDataList,
 } from '@/features/pdf-preview/util/types'
-import { isSplitTestEnabled } from '@/utils/splitTestUtils'
 import { captureException } from '@/infrastructure/error-reporter'
 import OError from '@overleaf/o-error'
 import getMeta from '@/utils/meta'
@@ -199,8 +198,7 @@ export const LocalCompileProvider: FC<React.PropsWithChildren> = ({
   const [compiledOnce, setCompiledOnce] = useState(false)
   // fetch initial compile response from cache
   const [initialCompileFromCache, setInitialCompileFromCache] = useState(
-    getMeta('ol-projectOwnerHasPremiumOnPageLoad') &&
-      isSplitTestEnabled('populate-clsi-cache') &&
+    getMeta('ol-canUseClsiCache') &&
       // Avoid fetching the initial compile from cache in PDF detach tab
       role !== 'detached'
   )
@@ -356,7 +354,9 @@ export const LocalCompileProvider: FC<React.PropsWithChildren> = ({
   useEffect(() => {
     if (initialCompileFromCache && !pendingInitialCompileFromCache) {
       setPendingInitialCompileFromCache(true)
-      getJSON(`/project/${projectId}/output/cached/output.overleaf.json`)
+      getJSON(`/project/${projectId}/output/cached/output.overleaf.json`, {
+        signal: AbortSignal.timeout(5_000),
+      })
         .then((data: any) => {
           // Hand data over to next effect, it will wait for project/doc loading.
           setDataFromCache(data)

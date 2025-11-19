@@ -2,6 +2,7 @@ DOCKER_COMPOSE_FLAGS ?= -f docker-compose.yml
 
 BUILD_NUMBER ?= local
 export BRANCH_NAME ?= $(shell git rev-parse --abbrev-ref HEAD)
+BRANCH_NAME_TAG_SAFE = $(shell echo $(BRANCH_NAME) | sed 's/\//\-\-/')
 export COMMIT_SHA ?= $(shell git rev-parse HEAD)
 PROJECT_NAME = web
 BUILD_DIR_NAME = $(shell pwd | xargs basename | tr -cd '[a-zA-Z0-9_.\-]')
@@ -16,7 +17,7 @@ CFG_SERVER_CE=/overleaf/services/web/test/acceptance/config/settings.test.server
 CFG_SERVER_PRO=/overleaf/services/web/test/acceptance/config/settings.test.server-pro.js
 
 DOCKER_COMPOSE := BUILD_NUMBER=$(BUILD_NUMBER) \
-	BRANCH_NAME=$(BRANCH_NAME) \
+	BRANCH_NAME=$(BRANCH_NAME_TAG_SAFE) \
 	PROJECT_NAME=$(PROJECT_NAME) \
 	MOCHA_GREP=${MOCHA_GREP} \
 	docker compose ${DOCKER_COMPOSE_FLAGS}
@@ -105,10 +106,20 @@ test_unit_mocha: export COMPOSE_PROJECT_NAME=unit_test_mocha_$(BUILD_DIR_NAME)
 test_unit_mocha: mongo_migrations_for_tests
 	$(DOCKER_COMPOSE) run --rm test_unit npm run test:unit:mocha
 
-test_unit_esm: export MOCHA_ROOT_SUITE_NAME = ESM unit tests
-test_unit_esm: export COMPOSE_PROJECT_NAME=unit_test_esm_$(BUILD_DIR_NAME)
+test_unit_esm: export VITEST_ROOT_SUITE_NAME = ESM unit tests - parallel
+test_unit_esm: export COMPOSE_PROJECT_NAME=unit_test_esm_parallel_$(BUILD_DIR_NAME)
 test_unit_esm: mongo_migrations_for_tests
 	$(DOCKER_COMPOSE) run --rm test_unit npm run test:unit:esm
+
+test_unit_esm_parallel: export VITEST_ROOT_SUITE_NAME = ESM unit tests - parallel
+test_unit_esm_parallel: export COMPOSE_PROJECT_NAME=unit_test_esm_parallel_$(BUILD_DIR_NAME)
+test_unit_esm_parallel: mongo_migrations_for_tests
+	$(DOCKER_COMPOSE) run --rm test_unit npm run test:unit:esm:parallel
+
+test_unit_esm_sequential: export VITEST_ROOT_SUITE_NAME = ESM unit tests - sequential
+test_unit_esm_sequential: export COMPOSE_PROJECT_NAME=unit_test_esm_sequential_$(BUILD_DIR_NAME)
+test_unit_esm_sequential: mongo_migrations_for_tests
+	$(DOCKER_COMPOSE) run --rm test_unit npm run test:unit:esm:sequential
 
 test_unit_esm_watch: export COMPOSE_PROJECT_NAME=unit_test_esm_watch_$(BUILD_DIR_NAME)
 test_unit_esm_watch: mongo_migrations_for_tests
@@ -183,21 +194,26 @@ test_writefull:
 build_test_frontend_ct:
 	docker run --rm --volume /dev/shm:/dev/shm --user root $(IMAGE_CI) bash -ec 'for path in /overleaf/services/web/cypress/results /overleaf/services/web/node_modules/.cache; do mkdir -p $$path; chown -R node:node $$path; done && tar -cC / overleaf | tar -xC /dev/shm'
 
+test_frontend_ct_core_other: export CYPRESS_DOWNLOADS=./cypress/downloads/core
 test_frontend_ct_core_other: export CYPRESS_RESULTS=./cypress/results/core
 test_frontend_ct_core_other: export CYPRESS_SPEC_PATTERN=./test/frontend/**/*.spec.{js,jsx,ts,tsx}
 test_frontend_ct_core_other: export CYPRESS_EXCLUDE_SPEC_PATTERN=./test/frontend/features/**/*.spec.{js,jsx,ts,tsx}
 
+test_frontend_ct_core_features: export CYPRESS_DOWNLOADS=./cypress/downloads/core
 test_frontend_ct_core_features: export CYPRESS_RESULTS=./cypress/results/core
 test_frontend_ct_core_features: export CYPRESS_SPEC_PATTERN=./test/frontend/features/**/*.spec.{js,jsx,ts,tsx}
 test_frontend_ct_core_features: export CYPRESS_EXCLUDE_SPEC_PATTERN=./test/frontend/features/source-editor/**/*.spec.{js,jsx,ts,tsx}
 
+test_frontend_ct_modules: export CYPRESS_DOWNLOADS=./cypress/downloads/modules
 test_frontend_ct_modules: export CYPRESS_RESULTS=./cypress/results/modules
 test_frontend_ct_modules: export CYPRESS_SPEC_PATTERN=./modules/**/test/frontend/**/*.spec.{js,jsx,ts,tsx}
 
+test_frontend_ct_editor_other: export CYPRESS_DOWNLOADS=./cypress/downloads/editor_other
 test_frontend_ct_editor_other: export CYPRESS_RESULTS=./cypress/results/editor_other
 test_frontend_ct_editor_other: export CYPRESS_SPEC_PATTERN=./test/frontend/features/source-editor/**/*.spec.{js,jsx,ts,tsx}
 test_frontend_ct_editor_other: export CYPRESS_EXCLUDE_SPEC_PATTERN=./test/frontend/features/source-editor/components/codemirror-editor-visual*.spec.{js,jsx,ts,tsx}
 
+test_frontend_ct_editor_visual: export CYPRESS_DOWNLOADS=./cypress/downloads/editor_visual
 test_frontend_ct_editor_visual: export CYPRESS_RESULTS=./cypress/results/editor_visual
 test_frontend_ct_editor_visual: export CYPRESS_SPEC_PATTERN=./test/frontend/features/source-editor/components/codemirror-editor-visual*.spec.{js,jsx,ts,tsx}
 
@@ -421,7 +437,7 @@ ci:
 #
 ORG_PATH = /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 RUN_LINT_FORMAT ?= \
-	docker run --rm --env BRANCH_NAME --env CI --env COMMIT_SHA --env MONOREPO --volume ${PWD}/data/reports:/overleaf/services/web/data/reports ci/$(PROJECT_NAME):$(BRANCH_NAME)-$(BUILD_NUMBER)
+	docker run --rm --env BRANCH_NAME --env CI --env COMMIT_SHA --env MONOREPO --volume ${PWD}/data/reports:/overleaf/services/web/data/reports ${IMAGE_CI}
 
 NODE_MODULES_PATH := ${PATH}:${PWD}/node_modules/.bin:/overleaf/services/web/node_modules/.bin
 WITH_NODE_MODULES_PATH = \
@@ -544,12 +560,17 @@ shellcheck_fix:
 # Build & publish
 #
 
-IMAGE_CI ?= ci/$(PROJECT_NAME):$(BRANCH_NAME)-$(BUILD_NUMBER)
+IMAGE_CI ?= ci/$(PROJECT_NAME):$(BRANCH_NAME_TAG_SAFE)-$(BUILD_NUMBER)
 IMAGE_REPO ?= us-east1-docker.pkg.dev/overleaf-ops/ol-docker/$(PROJECT_NAME)
-IMAGE_REPO_FINAL ?= $(IMAGE_REPO):$(BRANCH_NAME)-$(BUILD_NUMBER)
+IMAGE_REPO_FINAL ?= $(IMAGE_REPO):$(BRANCH_NAME_TAG_SAFE)-$(BUILD_NUMBER)
+# A shared scratch tag that is used by all the pipelines for pushing the layers of the production image ASAP from a parallel step.
+# We do not want to make the image available before all the tests have passed.
+# Using a single tag avoids generating cruft in our docker repository / AR.
+IMAGE_SCRATCH ?= $(IMAGE_REPO):do-not-use-this-tag-for-deploys--it-is-used-for-early-pushes-in-ci
 IMAGE_CACHE ?= $(IMAGE_REPO):cache-$(shell cat \
 	$(MONOREPO)/package.json \
 	$(MONOREPO)/package-lock.json \
+	$(MONOREPO)/libraries/ai/package.json \
 	$(MONOREPO)/libraries/access-token-encryptor/package.json \
   $(MONOREPO)/libraries/eslint-plugin/package.json \
   $(MONOREPO)/libraries/fetch-utils/package.json \
@@ -613,6 +634,7 @@ build:
 	docker build \
 		--build-arg SENTRY_RELEASE \
 		--tag $(IMAGE_REPO_FINAL) \
+		--tag $(IMAGE_SCRATCH) \
 		--target app \
 		--file Dockerfile \
 		../..
@@ -622,6 +644,9 @@ publish:
 
 push_branch:
 	docker push $(IMAGE_CACHE)
+
+push_scratch:
+	docker push $(IMAGE_SCRATCH)
 
 SENTRY_IMAGE=getsentry/sentry-cli:2.16.1
 sentry_prefetch:

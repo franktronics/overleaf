@@ -2,9 +2,9 @@ import logger from '@overleaf/logger'
 import http from 'node:http'
 import https from 'node:https'
 import Settings from '@overleaf/settings'
-import TpdsUpdateSender from '../ThirdPartyDataStore/TpdsUpdateSender.js'
-import TpdsProjectFlusher from '../ThirdPartyDataStore/TpdsProjectFlusher.js'
-import EditorRealTimeController from '../Editor/EditorRealTimeController.js'
+import TpdsUpdateSender from '../ThirdPartyDataStore/TpdsUpdateSender.mjs'
+import TpdsProjectFlusher from '../ThirdPartyDataStore/TpdsProjectFlusher.mjs'
+import EditorRealTimeController from '../Editor/EditorRealTimeController.mjs'
 import SystemMessageManager from '../SystemMessages/SystemMessageManager.mjs'
 
 const AdminController = {

@@ -10,22 +10,20 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-import SessionManager from '../Authentication/SessionManager.js'
+import SessionManager from '../Authentication/SessionManager.mjs'
 import Settings from '@overleaf/settings'
 import _ from 'lodash'
-import AnalyticsManager from '../../../../app/src/Features/Analytics/AnalyticsManager.js'
+import AnalyticsManager from '../../../../app/src/Features/Analytics/AnalyticsManager.mjs'
 import LinkedFilesHandler from './LinkedFilesHandler.mjs'
 import LinkedFilesErrors from './LinkedFilesErrors.mjs'
 import {
   OutputFileFetchFailedError,
   FileTooLargeError,
-  OError,
 } from '../Errors/Errors.js'
 import Modules from '../../infrastructure/Modules.js'
 import { plainTextResponse } from '../../infrastructure/Response.js'
 import { z, zz, validateReq } from '../../infrastructure/Validation.js'
-import ReferencesHandler from '../References/ReferencesHandler.mjs'
-import EditorRealTimeController from '../Editor/EditorRealTimeController.js'
+import EditorRealTimeController from '../Editor/EditorRealTimeController.mjs'
 import { expressify } from '@overleaf/promise-utils'
 import ProjectOutputFileAgent from './ProjectOutputFileAgent.mjs'
 import ProjectFileAgent from './ProjectFileAgent.mjs'
@@ -142,26 +140,16 @@ async function refreshLinkedFile(req, res, next) {
   }
 
   if (req.body.shouldReindexReferences) {
-    let data
-    try {
-      data = await ReferencesHandler.promises.indexAll(projectId)
-    } catch (error) {
-      OError.tag(error, 'failed to index references', {
-        projectId,
-      })
-      return next(error)
-    }
+    // Signal to clients that they should re-index references
     EditorRealTimeController.emitToRoom(
       projectId,
       'references:keys:updated',
-      data.keys,
+      [],
       true,
       clientId
     )
-    res.json({ new_file_id: newFileId })
-  } else {
-    res.json({ new_file_id: newFileId })
   }
+  res.json({ new_file_id: newFileId })
 }
 
 export default LinkedFilesController = {

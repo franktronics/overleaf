@@ -23,61 +23,64 @@ describe('RestoreManager', function () {
       default: Errors,
     }))
 
-    vi.doMock('../../../../app/src/Features/History/HistoryManager.js', () => ({
-      default: (ctx.HistoryManager = {
-        promises: {
-          getContentAtVersion: sinon.stub().resolves({
-            // Raw snapshot data that will be passed to Snapshot.fromRaw
-            files: {
-              'main.tex': {
-                hash: 'abcdef1234567890abcdef1234567890abcdef12',
-                stringLength: 100,
-                metadata: {
-                  editorId: 'test-editor',
+    vi.doMock(
+      '../../../../app/src/Features/History/HistoryManager.mjs',
+      () => ({
+        default: (ctx.HistoryManager = {
+          promises: {
+            getContentAtVersion: sinon.stub().resolves({
+              // Raw snapshot data that will be passed to Snapshot.fromRaw
+              files: {
+                'main.tex': {
+                  hash: 'abcdef1234567890abcdef1234567890abcdef12',
+                  stringLength: 100,
+                  metadata: {
+                    editorId: 'test-editor',
+                  },
+                },
+                'foo.tex': {
+                  hash: 'abcdef1234567890abcdef1234567890abcdef12',
+                  stringLength: 100,
+                  metadata: {
+                    editorId: 'test-editor',
+                  },
+                },
+                'folder/file.tex': {
+                  hash: 'abcdef1234567890abcdef1234567890abcdef12',
+                  stringLength: 100,
+                  metadata: {
+                    editorId: 'test-editor',
+                  },
+                },
+                'foo.png': {
+                  hash: 'abcdef1234567890abcdef1234567890abcdef12',
+                  stringLength: 100,
+                  metadata: {
+                    provider: 'bar',
+                  },
+                },
+                'linkedFile.bib': {
+                  hash: 'abcdef1234567890abcdef1234567890abcdef12',
+                  stringLength: 100,
+                  metadata: {
+                    provider: 'mendeley',
+                  },
+                },
+                'withMainTrue.tex': {
+                  hash: 'abcdef1234567890abcdef1234567890abcdef12',
+                  stringLength: 100,
+                  metadata: {
+                    main: true,
+                  },
                 },
               },
-              'foo.tex': {
-                hash: 'abcdef1234567890abcdef1234567890abcdef12',
-                stringLength: 100,
-                metadata: {
-                  editorId: 'test-editor',
-                },
-              },
-              'folder/file.tex': {
-                hash: 'abcdef1234567890abcdef1234567890abcdef12',
-                stringLength: 100,
-                metadata: {
-                  editorId: 'test-editor',
-                },
-              },
-              'foo.png': {
-                hash: 'abcdef1234567890abcdef1234567890abcdef12',
-                stringLength: 100,
-                metadata: {
-                  provider: 'bar',
-                },
-              },
-              'linkedFile.bib': {
-                hash: 'abcdef1234567890abcdef1234567890abcdef12',
-                stringLength: 100,
-                metadata: {
-                  provider: 'mendeley',
-                },
-              },
-              'withMainTrue.tex': {
-                hash: 'abcdef1234567890abcdef1234567890abcdef12',
-                stringLength: 100,
-                metadata: {
-                  main: true,
-                },
-              },
-            },
-            timestamp: new Date().toISOString(),
-          }),
-          requestBlob: sinon.stub().resolves({ stream: ctx.blobStream }),
-        },
-      }),
-    }))
+              timestamp: new Date().toISOString(),
+            }),
+            requestBlob: sinon.stub().resolves({ stream: ctx.blobStream }),
+          },
+        }),
+      })
+    )
 
     vi.doMock('../../../../app/src/infrastructure/Metrics.js', () => ({
       default: {
@@ -91,7 +94,49 @@ describe('RestoreManager', function () {
     }))
 
     vi.doMock('@overleaf/settings', () => ({
-      default: {},
+      default: {
+        fileIgnorePattern:
+          '**/{{__MACOSX,.git,.texpadtmp,.R}{,/**},.!(latexmkrc),*.{dvi,aux,log,toc,out,pdfsync,synctex,synctex(busy),fdb_latexmk,fls,nlo,ind,glo,gls,glg,bbl,blg,doc,docx,gz,swp}}',
+        textExtensions: [
+          'tex',
+          'latex',
+          'sty',
+          'cls',
+          'bst',
+          'bib',
+          'bibtex',
+          'txt',
+          'tikz',
+          'mtx',
+          'rtex',
+          'md',
+          'asy',
+          'lbx',
+          'bbx',
+          'cbx',
+          'm',
+          'lco',
+          'dtx',
+          'ins',
+          'ist',
+          'def',
+          'clo',
+          'ldf',
+          'rmd',
+          'lua',
+          'gv',
+          'mf',
+          'yml',
+          'yaml',
+          'lhs',
+          'mk',
+          'xmpdata',
+          'cfg',
+          'rnw',
+          'ltx',
+          'inc',
+        ],
+      },
     }))
 
     vi.doMock('../../../../app/src/infrastructure/FileWriter', () => ({

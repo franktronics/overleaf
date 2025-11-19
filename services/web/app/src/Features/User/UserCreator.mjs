@@ -2,11 +2,11 @@ import logger from '@overleaf/logger'
 import util from 'node:util'
 import { AffiliationError } from '../Errors/Errors.js'
 import Features from '../../infrastructure/Features.js'
-import { User } from '../../models/User.js'
-import UserDeleter from './UserDeleter.js'
-import UserGetter from './UserGetter.js'
-import UserUpdater from './UserUpdater.js'
-import Analytics from '../Analytics/AnalyticsManager.js'
+import { User } from '../../models/User.mjs'
+import UserDeleter from './UserDeleter.mjs'
+import UserGetter from './UserGetter.mjs'
+import UserUpdater from './UserUpdater.mjs'
+import Analytics from '../Analytics/AnalyticsManager.mjs'
 import UserOnboardingEmailManager from './UserOnboardingEmailManager.mjs'
 import UserPostRegistrationAnalyticsManager from './UserPostRegistrationAnalyticsManager.mjs'
 import OError from '@overleaf/o-error'
@@ -71,7 +71,7 @@ async function createNewUser(attributes, options = {}) {
     createdAt: new Date(),
     reversedHostname,
   }
-  if (Features.hasFeature('affiliations')) {
+  if (Features.hasFeature('affiliations') && !options.requireAffiliation) {
     emailData.affiliationUnchecked = true
   }
   if (

@@ -168,26 +168,29 @@ describe('EditorHttpController', function () {
     vi.mock('../../../../app/src/Features/Errors/Errors.js', () =>
       vi.importActual('../../../../app/src/Features/Errors/Errors.js')
     )
-    vi.doMock('../../../../app/src/Features/Project/ProjectDeleter.js', () => ({
-      default: ctx.ProjectDeleter,
-    }))
-    vi.doMock('../../../../app/src/Features/Project/ProjectGetter.js', () => ({
+    vi.doMock(
+      '../../../../app/src/Features/Project/ProjectDeleter.mjs',
+      () => ({
+        default: ctx.ProjectDeleter,
+      })
+    )
+    vi.doMock('../../../../app/src/Features/Project/ProjectGetter.mjs', () => ({
       default: ctx.ProjectGetter,
     }))
     vi.doMock(
-      '../../../../app/src/Features/Authorization/AuthorizationManager.js',
+      '../../../../app/src/Features/Authorization/AuthorizationManager.mjs',
       () => ({
         default: ctx.AuthorizationManager,
       })
     )
     vi.doMock(
-      '../../../../app/src/Features/Project/ProjectEditorHandler.js',
+      '../../../../app/src/Features/Project/ProjectEditorHandler.mjs',
       () => ({
         default: ctx.ProjectEditorHandler,
       })
     )
     vi.doMock(
-      '../../../../app/src/Features/Editor/EditorController.js',
+      '../../../../app/src/Features/Editor/EditorController.mjs',
       () => ({
         default: ctx.EditorController,
       })
@@ -196,31 +199,31 @@ describe('EditorHttpController', function () {
       default: ctx.Metrics,
     }))
     vi.doMock(
-      '../../../../app/src/Features/Collaborators/CollaboratorsGetter.js',
+      '../../../../app/src/Features/Collaborators/CollaboratorsGetter.mjs',
       () => ({
         default: ctx.CollaboratorsGetter,
       })
     )
     vi.doMock(
-      '../../../../app/src/Features/Collaborators/CollaboratorsHandler.js',
+      '../../../../app/src/Features/Collaborators/CollaboratorsHandler.mjs',
       () => ({
         default: ctx.CollaboratorsHandler,
       })
     )
     vi.doMock(
-      '../../../../app/src/Features/Collaborators/CollaboratorsInviteGetter.js',
+      '../../../../app/src/Features/Collaborators/CollaboratorsInviteGetter.mjs',
       () => ({
         default: ctx.CollaboratorsInviteGetter,
       })
     )
     vi.doMock(
-      '../../../../app/src/Features/TokenAccess/TokenAccessHandler.js',
+      '../../../../app/src/Features/TokenAccess/TokenAccessHandler.mjs',
       () => ({
         default: ctx.TokenAccessHandler,
       })
     )
     vi.doMock(
-      '../../../../app/src/Features/Authentication/SessionManager.js',
+      '../../../../app/src/Features/Authentication/SessionManager.mjs',
       () => ({
         default: ctx.SessionManager,
       })
@@ -229,25 +232,25 @@ describe('EditorHttpController', function () {
       default: ctx.FileWriter,
     }))
     vi.doMock(
-      '../../../../app/src/Features/Project/ProjectEntityUpdateHandler.js',
+      '../../../../app/src/Features/Project/ProjectEntityUpdateHandler.mjs',
       () => ({
         default: ctx.ProjectEntityUpdateHandler,
       })
     )
     vi.doMock(
-      '../../../../app/src/Features/Docstore/DocstoreManager.js',
+      '../../../../app/src/Features/Docstore/DocstoreManager.mjs',
       () => ({
         default: ctx.DocstoreManager,
       })
     )
     vi.doMock(
-      '../../../../app/src/Features/Errors/HttpErrorHandler.js',
+      '../../../../app/src/Features/Errors/HttpErrorHandler.mjs',
       () => ({
         default: ctx.HttpErrorHandler,
       })
     )
     vi.doMock(
-      '../../../../app/src/Features/SplitTests/SplitTestHandler.js',
+      '../../../../app/src/Features/SplitTests/SplitTestHandler.mjs',
       () => ({
         default: ctx.SplitTestHandler,
       })
@@ -258,7 +261,7 @@ describe('EditorHttpController', function () {
         default: {},
       })
     )
-    vi.doMock('../../../../app/src/Features/User/UserGetter.js', () => ({
+    vi.doMock('../../../../app/src/Features/User/UserGetter.mjs', () => ({
       default: ctx.UserGetter,
     }))
 

@@ -1,9 +1,8 @@
-import {
-  hasAdminCapability,
-  hasAdminAccess,
-} from '../Helpers/AdminAuthorizationHelper.js'
-import SessionManager from '../Authentication/SessionManager.js'
+import AdminAuthorizationHelper from '../Helpers/AdminAuthorizationHelper.mjs'
+import SessionManager from '../Authentication/SessionManager.mjs'
 import Settings from '@overleaf/settings'
+
+const { hasAdminCapability, hasAdminAccess } = AdminAuthorizationHelper
 
 const UserMembershipAuthorization = {
   hasStaffAccess(requiredStaffAccess) {

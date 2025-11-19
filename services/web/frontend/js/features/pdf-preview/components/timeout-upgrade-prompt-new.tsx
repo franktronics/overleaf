@@ -1,22 +1,16 @@
 import { Trans, useTranslation } from 'react-i18next'
 import { useDetachCompileContext } from '../../../shared/context/detach-compile-context'
 import StartFreeTrialButton from '../../../shared/components/start-free-trial-button'
-import { memo, useCallback, useMemo } from 'react'
+import { memo, useCallback, useMemo, useState } from 'react'
 import PdfLogEntry from './pdf-log-entry'
 import { useStopOnFirstError } from '../../../shared/hooks/use-stop-on-first-error'
 import OLButton from '@/shared/components/ol/ol-button'
 import * as eventTracking from '../../../infrastructure/event-tracking'
 import getMeta from '@/utils/meta'
-import {
-  populateEditorRedesignSegmentation,
-  useEditorAnalytics,
-} from '@/shared/hooks/use-editor-analytics'
-import {
-  isNewUser,
-  useIsNewEditorEnabled,
-  useIsNewErrorLogsPositionEnabled,
-} from '@/features/ide-redesign/utils/new-editor-utils'
-import { getSplitTestVariant } from '@/utils/splitTestUtils'
+import { populateEditorRedesignSegmentation } from '@/shared/hooks/use-editor-analytics'
+import CompileTimeoutPaywallModal from '@/features/pdf-preview/components/compile-timeout-paywall-modal'
+import { useIsNewEditorEnabled } from '@/features/ide-redesign/utils/new-editor-utils'
+import { isSplitTestEnabled } from '@/utils/splitTestUtils'
 
 function TimeoutUpgradePromptNew() {
   const {
@@ -26,6 +20,16 @@ function TimeoutUpgradePromptNew() {
     isProjectOwner,
   } = useDetachCompileContext()
   const newEditor = useIsNewEditorEnabled()
+  const shouldHideCompileTimeoutInfo = isSplitTestEnabled(
+    'compile-timeout-remove-info'
+  )
+
+  const isCompileTimeoutTargetPlansEnabled = isSplitTestEnabled(
+    'compile-timeout-target-plans'
+  )
+
+  const [showCompileTimeoutPaywall, setShowCompileTimeoutPaywall] =
+    useState(false)
 
   const { enableStopOnFirstError } = useStopOnFirstError({
     eventSource: 'timeout-new',
@@ -57,14 +61,22 @@ function TimeoutUpgradePromptNew() {
       <CompileTimeout
         isProjectOwner={isProjectOwner}
         segmentation={sharedSegmentation}
+        onShowPaywallModal={() => setShowCompileTimeoutPaywall(true)}
+        isCompileTimeoutTargetPlansEnabled={isCompileTimeoutTargetPlansEnabled}
       />
-      {getMeta('ol-ExposedSettings').enableSubscriptions && (
-        <PreventTimeoutHelpMessage
-          handleEnableStopOnFirstErrorClick={handleEnableStopOnFirstErrorClick}
-          lastCompileOptions={lastCompileOptions}
-          segmentation={sharedSegmentation}
-        />
-      )}
+      {getMeta('ol-ExposedSettings').enableSubscriptions &&
+        !shouldHideCompileTimeoutInfo && (
+          <PreventTimeoutHelpMessage
+            handleEnableStopOnFirstErrorClick={
+              handleEnableStopOnFirstErrorClick
+            }
+            lastCompileOptions={lastCompileOptions}
+          />
+        )}
+      <CompileTimeoutPaywallModal
+        show={showCompileTimeoutPaywall}
+        onHide={() => setShowCompileTimeoutPaywall(false)}
+      />
     </>
   )
 }
@@ -72,34 +84,38 @@ function TimeoutUpgradePromptNew() {
 type CompileTimeoutProps = {
   isProjectOwner: boolean
   segmentation: eventTracking.Segmentation
+  onShowPaywallModal: () => void
+  isCompileTimeoutTargetPlansEnabled: boolean
 }
 
 const CompileTimeout = memo(function CompileTimeout({
   isProjectOwner,
   segmentation,
+  onShowPaywallModal,
+  isCompileTimeoutTargetPlansEnabled,
 }: CompileTimeoutProps) {
   const { t } = useTranslation()
-  const newLogsPosition = useIsNewErrorLogsPositionEnabled()
-
+  const newEditor = useIsNewEditorEnabled()
   const extraSearchParams = useMemo(() => {
-    if (!isNewUser()) {
-      return undefined
-    }
-
-    const variant = getSplitTestVariant('editor-redesign-new-users')
-
-    if (!variant) {
-      return undefined
-    }
-
     return {
-      itm_content: variant,
+      itm_content: newEditor ? 'new-editor' : 'old-editor',
     }
-  }, [])
+  }, [newEditor])
+
+  const handleFreeTrialClick = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      if (isCompileTimeoutTargetPlansEnabled) {
+        event.preventDefault()
+        event.stopPropagation()
+        onShowPaywallModal()
+      }
+    },
+    [isCompileTimeoutTargetPlansEnabled, onShowPaywallModal]
+  )
 
   return (
     <PdfLogEntry
-      autoExpand={!newLogsPosition}
+      autoExpand
       headerTitle={t('your_compile_timed_out')}
       formattedContent={
         getMeta('ol-ExposedSettings').enableSubscriptions && (
@@ -133,6 +149,7 @@ const CompileTimeout = memo(function CompileTimeout({
                   buttonProps={{ variant: 'primary', className: 'w-100' }}
                   segmentation={segmentation}
                   extraSearchParams={extraSearchParams}
+                  handleClick={handleFreeTrialClick}
                 >
                   {t('start_a_free_trial')}
                 </StartFreeTrialButton>
@@ -151,51 +168,20 @@ const CompileTimeout = memo(function CompileTimeout({
 type PreventTimeoutHelpMessageProps = {
   lastCompileOptions: any
   handleEnableStopOnFirstErrorClick: () => void
-  segmentation: eventTracking.Segmentation
 }
 
 const PreventTimeoutHelpMessage = memo(function PreventTimeoutHelpMessage({
   lastCompileOptions,
   handleEnableStopOnFirstErrorClick,
-  segmentation,
 }: PreventTimeoutHelpMessageProps) {
   const { t } = useTranslation()
-  const { sendEvent } = useEditorAnalytics()
-  const newLogsPosition = useIsNewErrorLogsPositionEnabled()
-
-  function sendInfoClickEvent() {
-    sendEvent('paywall-info-click', {
-      ...segmentation,
-      'paywall-type': 'compile-timeout',
-      content: 'blog',
-    })
-  }
-
-  const compileTimeoutChangesBlogLink = (
-    /* eslint-disable-next-line jsx-a11y/anchor-has-content, react/jsx-key */
-    <a
-      aria-label={t('read_more_about_free_compile_timeouts_servers')}
-      href="/blog/changes-to-free-compile-timeout"
-      rel="noopener noreferrer"
-      target="_blank"
-      onClick={sendInfoClickEvent}
-    />
-  )
 
   return (
     <PdfLogEntry
-      autoExpand={!newLogsPosition}
+      autoExpand
       headerTitle={t('reasons_for_compile_timeouts')}
       formattedContent={
         <>
-          <p>
-            <em>
-              <Trans
-                i18nKey="weve_reduced_compile_timeout"
-                components={[compileTimeoutChangesBlogLink]}
-              />
-            </em>
-          </p>
           <p>{t('common_causes_of_compile_timeouts_include')}:</p>
           <ul>
             <li>
@@ -207,6 +193,13 @@ const PreventTimeoutHelpMessage = memo(function PreventTimeoutHelpMessage({
                     href="/learn/how-to/Optimising_very_large_image_files"
                     rel="noopener noreferrer"
                     target="_blank"
+                    onClick={() => {
+                      eventTracking.sendMB('paywall-info-click', {
+                        'paywall-type': 'compile-timeout',
+                        content: 'docs',
+                        type: 'optimize',
+                      })
+                    }}
                   />,
                 ]}
               />
@@ -220,6 +213,13 @@ const PreventTimeoutHelpMessage = memo(function PreventTimeoutHelpMessage({
                     href="/learn/how-to/Fixing_and_preventing_compile_timeouts#Step_3:_Assess_your_project_for_time-consuming_tasks_and_fatal_errors"
                     rel="noopener noreferrer"
                     target="_blank"
+                    onClick={() => {
+                      eventTracking.sendMB('paywall-info-click', {
+                        'paywall-type': 'compile-timeout',
+                        content: 'docs',
+                        type: 'fatal-error',
+                      })
+                    }}
                   />,
                 ]}
               />
@@ -253,6 +253,13 @@ const PreventTimeoutHelpMessage = memo(function PreventTimeoutHelpMessage({
                   href="/learn/how-to/Fixing_and_preventing_compile_timeouts"
                   rel="noopener noreferrer"
                   target="_blank"
+                  onClick={() => {
+                    eventTracking.sendMB('paywall-info-click', {
+                      'paywall-type': 'compile-timeout',
+                      content: 'docs',
+                      type: 'learn-more',
+                    })
+                  }}
                 />,
               ]}
             />

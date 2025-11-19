@@ -115,7 +115,7 @@ function InstitutionAndRole({ userEmailData }: InstitutionAndRoleProps) {
           >
             {!affiliation.department && !affiliation.role
               ? t('add_role_and_department')
-              : t('change_email')}
+              : t('change_role_and_department')}
           </OLButton>
         </div>
       ) : (
@@ -125,8 +125,8 @@ function InstitutionAndRole({ userEmailData }: InstitutionAndRoleProps) {
               <DownshiftInput
                 items={[...defaultRoles]}
                 inputValue={role}
-                placeholder={t('role')}
                 label={t('role')}
+                showLabel
                 setValue={setRole}
                 ref={roleRef}
               />
@@ -135,8 +135,8 @@ function InstitutionAndRole({ userEmailData }: InstitutionAndRoleProps) {
               <DownshiftInput
                 items={departments}
                 inputValue={department}
-                placeholder={t('department')}
                 label={t('department')}
+                showLabel
                 setValue={setDepartment}
               />
             </OLFormGroup>

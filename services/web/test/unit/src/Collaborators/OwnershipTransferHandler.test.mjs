@@ -85,24 +85,24 @@ describe('OwnershipTransferHandler', function () {
       vi.importActual('../../../../app/src/Features/Errors/Errors.js')
     )
 
-    vi.doMock('../../../../app/src/Features/Project/ProjectGetter.js', () => ({
+    vi.doMock('../../../../app/src/Features/Project/ProjectGetter.mjs', () => ({
       default: ctx.ProjectGetter,
     }))
 
-    vi.doMock('../../../../app/src/models/Project.js', () => ({
+    vi.doMock('../../../../app/src/models/Project.mjs', () => ({
       Project: ctx.ProjectModel,
     }))
 
-    vi.doMock('../../../../app/src/Features/Tags/TagsHandler.js', () => ({
+    vi.doMock('../../../../app/src/Features/Tags/TagsHandler.mjs', () => ({
       default: ctx.TagsHandler,
     }))
 
-    vi.doMock('../../../../app/src/Features/User/UserGetter.js', () => ({
+    vi.doMock('../../../../app/src/Features/User/UserGetter.mjs', () => ({
       default: ctx.UserGetter,
     }))
 
     vi.doMock(
-      '../../../../app/src/Features/ThirdPartyDataStore/TpdsProjectFlusher.js',
+      '../../../../app/src/Features/ThirdPartyDataStore/TpdsProjectFlusher.mjs',
       () => ({
         default: ctx.TpdsProjectFlusher,
       })
@@ -115,12 +115,12 @@ describe('OwnershipTransferHandler', function () {
       })
     )
 
-    vi.doMock('../../../../app/src/Features/Email/EmailHandler.js', () => ({
+    vi.doMock('../../../../app/src/Features/Email/EmailHandler.mjs', () => ({
       default: ctx.EmailHandler,
     }))
 
     vi.doMock(
-      '../../../../app/src/Features/Collaborators/CollaboratorsHandler.js',
+      '../../../../app/src/Features/Collaborators/CollaboratorsHandler.mjs',
       () => ({
         default: ctx.CollaboratorsHandler,
       })

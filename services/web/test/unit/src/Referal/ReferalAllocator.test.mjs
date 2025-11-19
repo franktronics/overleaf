@@ -5,12 +5,12 @@ const modulePath = '../../../../app/src/Features/Referal/ReferalAllocator.mjs'
 
 describe('ReferalAllocator', function () {
   beforeEach(async function (ctx) {
-    vi.doMock('../../../../app/src/models/User.js', () => ({
+    vi.doMock('../../../../app/src/models/User.mjs', () => ({
       User: (ctx.User = {}),
     }))
 
     vi.doMock(
-      '../../../../app/src/Features/Subscription/FeaturesUpdater.js',
+      '../../../../app/src/Features/Subscription/FeaturesUpdater.mjs',
       () => ({
         default: (ctx.FeaturesUpdater = {}),
       })

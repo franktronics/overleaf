@@ -4,6 +4,7 @@ import sinon from 'sinon'
 import logger from '@overleaf/logger'
 import sinonChai from 'sinon-chai'
 import chaiAsPromised from 'chai-as-promised'
+import mongoose from 'mongoose'
 
 /*
  * Chai configuration
@@ -51,4 +52,8 @@ afterEach(() => {
   vi.restoreAllMocks()
   vi.resetModules()
   sinon.restore()
+  const modelNames = mongoose.modelNames()
+  modelNames.forEach(name => {
+    delete mongoose.connection.models[name]
+  })
 })

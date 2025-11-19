@@ -155,9 +155,7 @@ function AddEmail() {
 
   const InputComponent = (
     <>
-      <label htmlFor="affiliations-email" className="visually-hidden">
-        {t('email')}
-      </label>
+      <label htmlFor="affiliations-email">{t('email')}</label>
       <Input
         onChange={handleEmailChange}
         handleAddNewEmail={handleAddNewEmail}
@@ -245,6 +243,7 @@ function AddEmail() {
                 <AddEmailViaSSO
                   email={newEmail}
                   domainInfo={newEmailMatchedDomain}
+                  userInstitutions={state.data.linkedInstitutionIds}
                 />
               </div>
             </Cell>
@@ -259,12 +258,28 @@ function AddEmail() {
 function AddEmailViaSSO({
   email,
   domainInfo,
+  userInstitutions,
 }: {
   email: string
   domainInfo: DomainInfo
+  userInstitutions: string[]
 }) {
   if (domainInfo.university.ssoEnabled) {
-    // SSO for Commons institution
+    // Check if the user has already linked this institution
+    if (userInstitutions.includes(domainInfo.university.id.toString())) {
+      return (
+        <Notification
+          type="error"
+          ariaLive="polite"
+          content={
+            <>
+              This institution is already linked with your account via another
+              email address.
+            </>
+          }
+        />
+      )
+    }
     return <SsoLinkingInfo email={email} domainInfo={domainInfo} />
   } else if (
     domainInfo.group?.domainCaptureEnabled &&

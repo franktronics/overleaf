@@ -149,7 +149,7 @@ describe('ClsiManager', function () {
         },
         clsi: {
           url: `http://${CLSI_HOST}`,
-          submissionBackendClass: 'n2d',
+          submissionBackendClass: 'c3d',
         },
         clsi_new: {
           sample: 100,
@@ -280,7 +280,7 @@ describe('ClsiManager', function () {
           ctx.project._id,
           ctx.user_id,
           {
-            compileBackendClass: 'n2d',
+            compileBackendClass: 'c3d',
             compileGroup: 'standard',
             timeout: ctx.timeout,
           }
@@ -294,7 +294,7 @@ describe('ClsiManager', function () {
               url.host === CLSI_HOST &&
               url.pathname ===
                 `/project/${ctx.project._id}/user/${ctx.user_id}/compile` &&
-              url.searchParams.get('compileBackendClass') === 'n2d' &&
+              url.searchParams.get('compileBackendClass') === 'c3d' &&
               url.searchParams.get('compileGroup') === 'standard'
           ),
           {
@@ -374,7 +374,7 @@ describe('ClsiManager', function () {
           ctx.project._id,
           ctx.user_id,
           'standard',
-          'n2d',
+          'c3d',
           ctx.newClsiServerId
         )
       })
@@ -417,7 +417,7 @@ describe('ClsiManager', function () {
         ctx.result = await ctx.ClsiManager.promises.sendRequest(
           ctx.project._id,
           ctx.user_id,
-          { compileBackendClass: 'n2d', compileGroup: 'standard' }
+          { compileBackendClass: 'c3d', compileGroup: 'standard' }
         )
       })
 
@@ -452,7 +452,7 @@ describe('ClsiManager', function () {
           {
             timeout: 100,
             incrementalCompilesEnabled: true,
-            compileBackendClass: 'n2d',
+            compileBackendClass: 'c3d',
             compileGroup: 'priority',
             compileFromClsiCache: true,
             populateClsiCache: true,
@@ -499,7 +499,7 @@ describe('ClsiManager', function () {
               url.hostname === CLSI_HOST &&
               url.pathname ===
                 `/project/${ctx.project._id}/user/${ctx.user_id}/compile` &&
-              url.searchParams.get('compileBackendClass') === 'n2d' &&
+              url.searchParams.get('compileBackendClass') === 'c3d' &&
               url.searchParams.get('compileGroup') === 'priority'
           ),
           {
@@ -798,7 +798,7 @@ describe('ClsiManager', function () {
         ctx.result = await ctx.ClsiManager.promises.sendRequest(
           ctx.project._id,
           ctx.user_id,
-          { compileBackendClass: 'n2d' }
+          { compileBackendClass: 'c3d' }
         )
       })
 
@@ -823,7 +823,7 @@ describe('ClsiManager', function () {
       it('should clear the CLSI server id cookie', function (ctx) {
         expect(
           ctx.ClsiCookieManager.promises.clearServerId
-        ).to.have.been.calledWith(ctx.project._id, ctx.user_id, 'n2d')
+        ).to.have.been.calledWith(ctx.project._id, ctx.user_id, 'c3d')
       })
 
       it('should return a success status', function (ctx) {
@@ -852,7 +852,7 @@ describe('ClsiManager', function () {
           ctx.project._id,
           ctx.user_id,
           {
-            compileBackendClass: 'c2d',
+            compileBackendClass: 'c4d',
             compileGroup: 'priority',
           }
         )
@@ -868,7 +868,7 @@ describe('ClsiManager', function () {
               url.host === CLSI_HOST &&
               url.pathname ===
                 `/project/${ctx.project._id}/user/${ctx.user_id}/compile` &&
-              url.searchParams.get('compileBackendClass') === 'c2d' &&
+              url.searchParams.get('compileBackendClass') === 'c4d' &&
               url.searchParams.get('compileGroup') === 'priority'
           )
         )
@@ -885,7 +885,7 @@ describe('ClsiManager', function () {
           ctx.AnalyticsManager.recordEventForUserInBackground
         ).to.have.been.calledWith(ctx.user_id, 'double-compile-result', {
           projectId: 'project-id',
-          compileBackendClass: 'c2d',
+          compileBackendClass: 'c4d',
           newCompileBackendClass: 'n4',
           status: 'success',
           compileTime: 1337,
@@ -930,7 +930,7 @@ describe('ClsiManager', function () {
         ctx.result = await ctx.ClsiManager.promises.sendExternalRequest(
           ctx.submissionId,
           ctx.clsiRequest,
-          { compileBackendClass: 'n2d', compileGroup: 'standard' }
+          { compileBackendClass: 'c3d', compileGroup: 'standard' }
         )
       })
 
@@ -940,7 +940,7 @@ describe('ClsiManager', function () {
             url =>
               url.host === CLSI_HOST &&
               url.pathname === `/project/${ctx.submissionId}/compile` &&
-              url.searchParams.get('compileBackendClass') === 'n2d' &&
+              url.searchParams.get('compileBackendClass') === 'c3d' &&
               url.searchParams.get('compileGroup') === 'standard'
           ),
           {
@@ -1005,7 +1005,7 @@ describe('ClsiManager', function () {
         await ctx.ClsiManager.promises.deleteAuxFiles(
           ctx.project._id,
           ctx.user_id,
-          { compileBackendClass: 'n2d', compileGroup: 'standard' },
+          { compileBackendClass: 'c3d', compileGroup: 'standard' },
           'node-1'
         )
       })
@@ -1017,7 +1017,7 @@ describe('ClsiManager', function () {
               url.host === CLSI_HOST &&
               url.pathname ===
                 `/project/${ctx.project._id}/user/${ctx.user_id}` &&
-              url.searchParams.get('compileBackendClass') === 'n2d' &&
+              url.searchParams.get('compileBackendClass') === 'c3d' &&
               url.searchParams.get('compileGroup') === 'standard' &&
               url.searchParams.get('clsiserverid') === 'node-1'
           ),
@@ -1039,7 +1039,7 @@ describe('ClsiManager', function () {
 
       it('should clear the clsi persistance', function (ctx) {
         ctx.ClsiCookieManager.promises.clearServerId
-          .calledWith(ctx.project._id, ctx.user_id, 'n2d')
+          .calledWith(ctx.project._id, ctx.user_id, 'c3d')
           .should.equal(true)
       })
 
@@ -1055,7 +1055,7 @@ describe('ClsiManager', function () {
         await ctx.ClsiManager.promises.deleteAuxFiles(
           ctx.project._id,
           ctx.user_id,
-          { compileBackendClass: 'c2d', compileGroup: 'priority' },
+          { compileBackendClass: 'c4d', compileGroup: 'priority' },
           'node-1'
         )
         // wait for the background task to finish
@@ -1065,7 +1065,7 @@ describe('ClsiManager', function () {
       it('should clear both cookies', function (ctx) {
         expect(
           ctx.ClsiCookieManager.promises.clearServerId
-        ).to.have.been.calledWith(ctx.project._id, ctx.user_id, 'c2d')
+        ).to.have.been.calledWith(ctx.project._id, ctx.user_id, 'c4d')
         expect(
           ctx.ClsiCookieManager.promises.clearServerId
         ).to.have.been.calledWith(ctx.project._id, ctx.user_id, 'n4')
@@ -1078,7 +1078,7 @@ describe('ClsiManager', function () {
               url.host === CLSI_HOST &&
               url.pathname ===
                 `/project/${ctx.project._id}/user/${ctx.user_id}` &&
-              url.searchParams.get('compileBackendClass') === 'c2d' &&
+              url.searchParams.get('compileBackendClass') === 'c4d' &&
               url.searchParams.get('compileGroup') === 'priority' &&
               url.searchParams.get('clsiserverid') === 'node-1'
           ),
@@ -1107,7 +1107,7 @@ describe('ClsiManager', function () {
           ctx.project._id,
           ctx.user_id,
           false,
-          { compileBackendClass: 'n2d', compileGroup: 'standard' },
+          { compileBackendClass: 'c3d', compileGroup: 'standard' },
           'node-1'
         )
       })
@@ -1117,7 +1117,7 @@ describe('ClsiManager', function () {
           sinon.match(
             url =>
               url.toString() ===
-              `http://clsi.example.com/project/${ctx.project._id}/user/${ctx.user_id}/wordcount?compileBackendClass=n2d&compileGroup=standard&file=main.tex&image=mock-image-name&clsiserverid=node-1`
+              `http://clsi.example.com/project/${ctx.project._id}/user/${ctx.user_id}/wordcount?compileBackendClass=c3d&compileGroup=standard&file=main.tex&image=mock-image-name&clsiserverid=node-1`
           )
         )
       })
@@ -1134,7 +1134,7 @@ describe('ClsiManager', function () {
           ctx.project._id,
           ctx.user_id,
           'other.tex',
-          { compileBackendClass: 'n2d', compileGroup: 'standard' },
+          { compileBackendClass: 'c3d', compileGroup: 'standard' },
           'node-2'
         )
       })
@@ -1146,7 +1146,7 @@ describe('ClsiManager', function () {
               url.host === CLSI_HOST &&
               url.pathname ===
                 `/project/${ctx.project._id}/user/${ctx.user_id}/wordcount` &&
-              url.searchParams.get('compileBackendClass') === 'n2d' &&
+              url.searchParams.get('compileBackendClass') === 'c3d' &&
               url.searchParams.get('compileGroup') === 'standard' &&
               url.searchParams.get('clsiserverid') === 'node-2' &&
               url.searchParams.get('file') === 'other.tex' &&
@@ -1168,7 +1168,7 @@ describe('ClsiManager', function () {
           ctx.project._id,
           ctx.user_id,
           false,
-          { compileBackendClass: 'c2d', compileGroup: 'priority' },
+          { compileBackendClass: 'c4d', compileGroup: 'priority' },
           'node-1'
         )
         // wait for the background task to finish
@@ -1180,7 +1180,7 @@ describe('ClsiManager', function () {
           sinon.match(
             url =>
               url.toString() ===
-              `http://clsi.example.com/project/${ctx.project._id}/user/${ctx.user_id}/wordcount?compileBackendClass=c2d&compileGroup=priority&file=main.tex&image=mock-image-name&clsiserverid=node-1`
+              `http://clsi.example.com/project/${ctx.project._id}/user/${ctx.user_id}/wordcount?compileBackendClass=c4d&compileGroup=priority&file=main.tex&image=mock-image-name&clsiserverid=node-1`
           )
         )
         expect(ctx.FetchUtils.fetchStringWithResponse).to.have.been.calledWith(

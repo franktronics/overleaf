@@ -3,24 +3,25 @@ import { pipeline } from 'node:stream/promises'
 import { Cookie } from 'tough-cookie'
 import OError from '@overleaf/o-error'
 import Metrics from '@overleaf/metrics'
-import ProjectGetter from '../Project/ProjectGetter.js'
+import ProjectGetter from '../Project/ProjectGetter.mjs'
 import CompileManager from './CompileManager.mjs'
 import ClsiManager from './ClsiManager.mjs'
 import logger from '@overleaf/logger'
 import Settings from '@overleaf/settings'
 import Errors from '../Errors/Errors.js'
-import SessionManager from '../Authentication/SessionManager.js'
+import SessionManager from '../Authentication/SessionManager.mjs'
 import { RateLimiter } from '../../infrastructure/RateLimiter.js'
 import Validation from '../../infrastructure/Validation.js'
 import ClsiCookieManagerFactory from './ClsiCookieManager.mjs'
 import Path from 'node:path'
-import AnalyticsManager from '../Analytics/AnalyticsManager.js'
-import SplitTestHandler from '../SplitTests/SplitTestHandler.js'
+import AnalyticsManager from '../Analytics/AnalyticsManager.mjs'
+import SplitTestHandler from '../SplitTests/SplitTestHandler.mjs'
 import { expressify } from '@overleaf/promise-utils'
 import {
   fetchStreamWithResponse,
   RequestFailedError,
 } from '@overleaf/fetch-utils'
+import Features from '../../infrastructure/Features.js'
 
 const { z, zz, validateReq } = Validation
 const ClsiCookieManager = ClsiCookieManagerFactory(
@@ -64,36 +65,11 @@ async function _getSplitTestOptions(req, res) {
   } catch (e) {}
   const editorReq = { ...req, query }
 
-  // Lookup the clsi-cache flag in the backend.
-  // We may need to turn off the feature on a short notice, without requiring
-  //  all users to reload their editor page to disable the feature.
-  const { variant: populateClsiCacheVariant } =
-    await SplitTestHandler.promises.getAssignment(
-      editorReq,
-      res,
-      'populate-clsi-cache'
-    )
-  let populateClsiCache = populateClsiCacheVariant === 'enabled'
-  const compileFromClsiCache = populateClsiCache // use same split-test
-
-  if (!populateClsiCache) {
-    // Pre-populate the cache for the users in the split-test for prompts.
-    // Keep the compile from cache disabled for now.
-    const { variant } = await SplitTestHandler.promises.getAssignment(
-      editorReq,
-      res,
-      'populate-clsi-cache-for-prompt'
-    )
-    populateClsiCache = variant === 'enabled'
-  }
-
   const pdfDownloadDomain = Settings.pdfDownloadDomain
 
   if (!req.query.enable_pdf_caching) {
     // The frontend does not want to do pdf caching.
     return {
-      compileFromClsiCache,
-      populateClsiCache,
       pdfDownloadDomain,
       enablePdfCaching: false,
     }
@@ -111,16 +87,12 @@ async function _getSplitTestOptions(req, res) {
   if (!enablePdfCaching) {
     // Skip the lookup of the chunk size when caching is not enabled.
     return {
-      compileFromClsiCache,
-      populateClsiCache,
       pdfDownloadDomain,
       enablePdfCaching: false,
     }
   }
   const pdfCachingMinChunkSize = await getPdfCachingMinChunkSize(editorReq, res)
   return {
-    compileFromClsiCache,
-    populateClsiCache,
     pdfDownloadDomain,
     enablePdfCaching,
     pdfCachingMinChunkSize,
@@ -134,11 +106,10 @@ async function _syncTeX(req, res, direction, validatedOptions) {
   if (!buildId?.match(/^[a-f0-9-]+$/)) throw new Error('invalid ?buildId')
 
   const userId = CompileController._getUserIdForCompile(req)
-  const { compileFromClsiCache } = await _getSplitTestOptions(req, res)
   try {
     const body = await CompileManager.promises.syncTeX(projectId, userId, {
       direction,
-      compileFromClsiCache,
+      compileFromClsiCache: Features.hasFeature('saas'),
       validatedOptions: {
         ...validatedOptions,
         editorId,
@@ -209,15 +180,12 @@ const _CompileController = {
       options.incrementalCompilesEnabled = true
     }
 
-    let {
-      compileFromClsiCache,
-      populateClsiCache,
-      enablePdfCaching,
-      pdfCachingMinChunkSize,
-      pdfDownloadDomain,
-    } = await _getSplitTestOptions(req, res)
-    options.compileFromClsiCache = compileFromClsiCache
-    options.populateClsiCache = populateClsiCache
+    let { enablePdfCaching, pdfCachingMinChunkSize, pdfDownloadDomain } =
+      await _getSplitTestOptions(req, res)
+    if (Features.hasFeature('saas')) {
+      options.compileFromClsiCache = true
+      options.populateClsiCache = true
+    }
     options.enablePdfCaching = enablePdfCaching
     if (enablePdfCaching) {
       options.pdfCachingMinChunkSize = pdfCachingMinChunkSize
@@ -267,12 +235,7 @@ const _CompileController = {
           status,
           compileTime: timings?.compileE2E,
           timeout: limits.timeout,
-          server:
-            clsiServerId?.includes('-c2d-') ||
-            clsiServerId?.includes('-c3d-') ||
-            clsiServerId?.includes('-c4d-')
-              ? 'faster'
-              : 'normal',
+          server: clsiServerId?.includes('-c4d-') ? 'faster' : 'normal',
           clsiServerId,
           isAutoCompile,
           isInitialCompile: stats?.isInitialCompile === 1,

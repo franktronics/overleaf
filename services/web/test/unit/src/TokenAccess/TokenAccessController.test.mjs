@@ -4,8 +4,9 @@ import mongodb from 'mongodb-legacy'
 import MockRequest from '../helpers/MockRequest.js'
 import MockResponse from '../helpers/MockResponse.js'
 import PrivilegeLevels from '../../../../app/src/Features/Authorization/PrivilegeLevels.js'
-import { getSafeRedirectPath } from '../../../../app/src/Features/Helpers/UrlHelper.js'
+import UrlHelper from '../../../../app/src/Features/Helpers/UrlHelper.mjs'
 
+const { getSafeRedirectPath } = UrlHelper
 const ObjectId = mongodb.ObjectId
 
 const MODULE_PATH =
@@ -236,25 +237,24 @@ describe('TokenAccessController', function () {
       }),
     }))
 
-    vi.doMock(
-      '../../../../app/src/Features/Helpers/AdminAuthorizationHelper',
-      () =>
-        (ctx.AdminAuthorizationHelper = {
-          canRedirectToAdminDomain: sinon.stub(),
-        })
-    )
+    ctx.AdminAuthorizationHelper = {
+      canRedirectToAdminDomain: sinon.stub(),
+    }
 
     vi.doMock(
-      '../../../../app/src/Features/Helpers/UrlHelper',
-      () =>
-        (ctx.UrlHelper = {
-          getSafeAdminDomainRedirect: sinon
-            .stub()
-            .callsFake(
-              path => `${ctx.Settings.adminUrl}${getSafeRedirectPath(path)}`
-            ),
-        })
+      '../../../../app/src/Features/Helpers/AdminAuthorizationHelper',
+      () => ({ default: ctx.AdminAuthorizationHelper })
     )
+
+    vi.doMock('../../../../app/src/Features/Helpers/UrlHelper', () => ({
+      default: (ctx.UrlHelper = {
+        getSafeAdminDomainRedirect: sinon
+          .stub()
+          .callsFake(
+            path => `${ctx.Settings.adminUrl}${getSafeRedirectPath(path)}`
+          ),
+      }),
+    }))
 
     vi.doMock(
       '../../../../app/src/Features/Analytics/AnalyticsManager',
@@ -764,17 +764,12 @@ describe('TokenAccessController', function () {
           .stub()
           .resolves([{ email: 'test@not-overleaf.com' }])
 
-        await new Promise(resolve => {
-          ctx.res.callback = () => {
-            expect(ctx.res.json).to.have.been.calledWith({
-              redirect: `${ctx.Settings.adminUrl}/#prefix`,
-            })
-            resolve()
-          }
-          ctx.TokenAccessController.grantTokenAccessReadAndWrite(
-            ctx.req,
-            ctx.res
-          )
+        await ctx.TokenAccessController.grantTokenAccessReadAndWrite(
+          ctx.req,
+          ctx.res
+        )
+        expect(ctx.res.json).to.have.been.calledWith({
+          redirect: `${ctx.Settings.adminUrl}/#prefix`,
         })
       })
 

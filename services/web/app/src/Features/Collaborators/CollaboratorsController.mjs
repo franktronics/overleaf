@@ -1,23 +1,24 @@
 import OError from '@overleaf/o-error'
-import HttpErrorHandler from '../../Features/Errors/HttpErrorHandler.js'
+import HttpErrorHandler from '../../Features/Errors/HttpErrorHandler.mjs'
 import mongodb from 'mongodb-legacy'
-import CollaboratorsHandler from './CollaboratorsHandler.js'
-import CollaboratorsGetter from './CollaboratorsGetter.js'
+import CollaboratorsHandler from './CollaboratorsHandler.mjs'
+import CollaboratorsGetter from './CollaboratorsGetter.mjs'
 import OwnershipTransferHandler from './OwnershipTransferHandler.mjs'
-import SessionManager from '../Authentication/SessionManager.js'
-import EditorRealTimeController from '../Editor/EditorRealTimeController.js'
-import TagsHandler from '../Tags/TagsHandler.js'
+import SessionManager from '../Authentication/SessionManager.mjs'
+import EditorRealTimeController from '../Editor/EditorRealTimeController.mjs'
+import TagsHandler from '../Tags/TagsHandler.mjs'
 import Errors from '../Errors/Errors.js'
 import logger from '@overleaf/logger'
 import { expressify } from '@overleaf/promise-utils'
-import { hasAdminAccess } from '../Helpers/AdminAuthorizationHelper.js'
-import TokenAccessHandler from '../TokenAccess/TokenAccessHandler.js'
+import AdminAuthorizationHelper from '../Helpers/AdminAuthorizationHelper.mjs'
+import TokenAccessHandler from '../TokenAccess/TokenAccessHandler.mjs'
 import ProjectAuditLogHandler from '../Project/ProjectAuditLogHandler.mjs'
-import LimitationsManager from '../Subscription/LimitationsManager.js'
+import LimitationsManager from '../Subscription/LimitationsManager.mjs'
 import PrivilegeLevels from '../Authorization/PrivilegeLevels.js'
 import { z, zz, validateReq } from '../../infrastructure/Validation.js'
 import Features from '../../infrastructure/Features.js'
 
+const { hasAdminAccess } = AdminAuthorizationHelper
 const ObjectId = mongodb.ObjectId
 
 export default {

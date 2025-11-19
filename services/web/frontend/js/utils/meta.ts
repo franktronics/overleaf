@@ -82,10 +82,11 @@ export interface Meta {
   'ol-anonymous': boolean
   'ol-baseAssetPath': string
   'ol-brandVariation': Record<string, any>
+  'ol-canUseAddSeatsFeature': boolean
+  'ol-canUseClsiCache': boolean
+  'ol-canUseFlexibleLicensing': boolean
 
   // dynamic keys based on permissions
-  'ol-canUseAddSeatsFeature': boolean
-  'ol-canUseFlexibleLicensing': boolean
   'ol-cannot-add-secondary-email': boolean
   'ol-cannot-change-password': boolean
   'ol-cannot-delete-own-account': boolean
@@ -96,6 +97,7 @@ export interface Meta {
   'ol-cannot-reactivate-subscription': boolean
   'ol-cannot-use-ai': boolean
   'ol-capabilities': Array<'dropbox' | 'chat' | 'use-ai' | 'link-sharing'>
+
   'ol-compileSettings': {
     compileTimeout: number
   }
@@ -224,7 +226,6 @@ export interface Meta {
   'ol-project': any // TODO
   'ol-projectEntityCounts': { files: number; docs: number }
   'ol-projectName': string
-  'ol-projectOwnerHasPremiumOnPageLoad': boolean
   'ol-projectSyncSuccessMessage': string
   'ol-projectTags': Tag[]
   'ol-project_id': string
@@ -253,9 +254,7 @@ export interface Meta {
   'ol-shouldAllowEditingDetails': boolean
   'ol-shouldLoadHotjar': boolean
   'ol-showAiErrorAssistant': boolean
-  'ol-showBrlGeoBanner': boolean
   'ol-showCouponField': boolean
-  'ol-showFilters': boolean
   'ol-showGroupDiscount': boolean
   'ol-showGroupsAndEnterpriseBanner': boolean
   'ol-showInrGeoBanner': boolean
@@ -271,15 +270,22 @@ export interface Meta {
   'ol-ssoDisabled': boolean
   'ol-ssoErrorMessage': string
   'ol-ssoInitPath': string
-  'ol-stripeAccountId': string
-  'ol-stripePublicKeyUK': string
-  'ol-stripePublicKeyUS': string
-  'ol-stripeSubscriptionData': {
+  'ol-standardPlanPricing': {
+    monthly?: string
+    annual?: string
+    monthlyTimesTwelve?: string
+  }
+  'ol-stripeCustomerData': Array<{
     customerId: string
+    subscriptionId: string
     subscriptionState: string | null
     paymentProviderService: StripePaymentProviderService | null
-    segment: string | null
-  }
+    managementUrl: string
+    segment?: string | null
+    error?: string
+  }>
+  'ol-stripePublicKeyUK': string
+  'ol-stripePublicKeyUS': string
   'ol-subscription': any // TODO: mixed types, split into two fields
   'ol-subscriptionChangePreview': SubscriptionChangePreview
   'ol-subscriptionCreationPreview': SubscriptionCreationPreview
@@ -301,6 +307,7 @@ export interface Meta {
   'ol-translationLoadErrorMessage': string
   'ol-translationMaintenance': string
   'ol-translationUnableToJoin': string
+  'ol-trialDisabledReason': string | undefined
   'ol-usGovBannerVariant': USGovBannerVariant
   'ol-useShareJsHash': boolean
   'ol-user': User

@@ -1,4 +1,4 @@
-import { expect, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as path from 'node:path'
 import sinon from 'sinon'
 import MockResponse from '../../../../../test/unit/src/helpers/MockResponse.js'
@@ -42,36 +42,36 @@ describe('LaunchpadController', function () {
       })
     )
 
-    vi.doMock('../../../../../app/src/Features/Email/EmailHandler.js', () => ({
+    vi.doMock('../../../../../app/src/Features/Email/EmailHandler.mjs', () => ({
       default: (ctx.EmailHandler = { promises: {} }),
     }))
 
-    vi.doMock('../../../../../app/src/Features/User/UserGetter.js', () => ({
+    vi.doMock('../../../../../app/src/Features/User/UserGetter.mjs', () => ({
       default: (ctx.UserGetter = {
         promises: {},
       }),
     }))
 
-    vi.doMock('../../../../../app/src/models/User.js', () => ({
+    vi.doMock('../../../../../app/src/models/User.mjs', () => ({
       User: ctx.User,
     }))
 
     vi.doMock(
-      '../../../../../app/src/Features/Authentication/AuthenticationController.js',
+      '../../../../../app/src/Features/Authentication/AuthenticationController.mjs',
       () => ({
         default: (ctx.AuthenticationController = {}),
       })
     )
 
     vi.doMock(
-      '../../../../../app/src/Features/Authentication/AuthenticationManager.js',
+      '../../../../../app/src/Features/Authentication/AuthenticationManager.mjs',
       () => ({
         default: (ctx.AuthenticationManager = {}),
       })
     )
 
     vi.doMock(
-      '../../../../../app/src/Features/Authentication/SessionManager.js',
+      '../../../../../app/src/Features/Authentication/SessionManager.mjs',
       () => ({
         default: (ctx.SessionManager = {
           getSessionUser: sinon.stub(),
