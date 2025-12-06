@@ -21,14 +21,14 @@ import AuthorizationManager from '../Authorization/AuthorizationManager.mjs'
 import InactiveProjectManager from '../InactiveData/InactiveProjectManager.mjs'
 import ProjectUpdateHandler from './ProjectUpdateHandler.mjs'
 import ProjectGetter from './ProjectGetter.mjs'
-import PrivilegeLevels from '../Authorization/PrivilegeLevels.js'
+import PrivilegeLevels from '../Authorization/PrivilegeLevels.mjs'
 import SessionManager from '../Authentication/SessionManager.mjs'
 import Sources from '../Authorization/Sources.mjs'
 import TokenAccessHandler from '../TokenAccess/TokenAccessHandler.mjs'
 import CollaboratorsGetter from '../Collaborators/CollaboratorsGetter.mjs'
 import ProjectEntityHandler from './ProjectEntityHandler.mjs'
 import TpdsProjectFlusher from '../ThirdPartyDataStore/TpdsProjectFlusher.mjs'
-import Features from '../../infrastructure/Features.js'
+import Features from '../../infrastructure/Features.mjs'
 import BrandVariationsHandler from '../BrandVariations/BrandVariationsHandler.mjs'
 import UserController from '../User/UserController.mjs'
 import AnalyticsManager from '../Analytics/AnalyticsManager.mjs'
@@ -44,10 +44,10 @@ import PublicAccessLevels from '../Authorization/PublicAccessLevels.mjs'
 import TagsHandler from '../Tags/TagsHandler.mjs'
 import TutorialHandler from '../Tutorial/TutorialHandler.mjs'
 import UserUpdater from '../User/UserUpdater.mjs'
-import Modules from '../../infrastructure/Modules.js'
-import { z, zz, validateReq } from '../../infrastructure/Validation.js'
+import Modules from '../../infrastructure/Modules.mjs'
+import { z, zz, validateReq } from '../../infrastructure/Validation.mjs'
 import UserGetter from '../User/UserGetter.mjs'
-import { isStandaloneAiAddOnPlanCode } from '../Subscription/AiHelper.js'
+import { isStandaloneAiAddOnPlanCode } from '../Subscription/AiHelper.mjs'
 import SubscriptionController from '../Subscription/SubscriptionController.mjs'
 import { formatCurrency } from '../../util/currency.js'
 import UserSettingsHelper from './UserSettingsHelper.mjs'
@@ -435,8 +435,6 @@ const _ProjectController = {
       'visual-preview',
       'external-socket-heartbeat',
       'null-test-share-modal',
-      'pdf-caching-cached-url-lookup',
-      'pdf-caching-mode',
       'pdf-caching-prefetch-large',
       'pdf-caching-prefetching',
       'revert-file',
@@ -452,9 +450,17 @@ const _ProjectController = {
       'editor-redesign-new-users',
       'writefull-frontend-migration',
       'chat-edit-delete',
-      'compile-timeout-remove-info',
       'ai-workbench',
       'compile-timeout-target-plans',
+      'writefull-keywords-generator',
+      'writefull-figure-generator',
+      'wf-citations-checker',
+      'wf-citations-checker-dimensions',
+      'wf-citations-checker-on-selection',
+      'writefull-asymetric-queue-size-per-model',
+      'pdf-dark-mode',
+      'editor-redesign-opt-out',
+      'email-notifications',
     ].filter(Boolean)
 
     const getUserValues = async userId =>
@@ -864,6 +870,12 @@ const _ProjectController = {
         !userHasPremiumSub &&
         !userInNonIndividualSub
 
+      const userSettings = await UserSettingsHelper.buildUserSettings(
+        req,
+        res,
+        user
+      )
+
       res.render(template, {
         title: project.name,
         priority_title: true,
@@ -902,7 +914,7 @@ const _ProjectController = {
           isMemberOfGroupSubscription: userIsMemberOfGroupSubscription,
           hasInstitutionLicence: userHasInstitutionLicence,
         },
-        userSettings: UserSettingsHelper.buildUserSettings(user),
+        userSettings,
         labsExperiments: user.labsExperiments ?? [],
         privilegeLevel,
         anonymous,
@@ -1300,49 +1312,49 @@ const defaultUserValues = () => ({
 })
 
 const THEME_LIST = [
-  'cobalt',
-  'dracula',
-  'eclipse',
-  'monokai',
-  'overleaf',
-  'overleaf_dark',
-  'textmate',
+  { name: 'cobalt', dark: true },
+  { name: 'dracula', dark: true },
+  { name: 'eclipse', dark: false },
+  { name: 'monokai', dark: true },
+  { name: 'overleaf', dark: false },
+  { name: 'overleaf_dark', dark: true },
+  { name: 'textmate', dark: false },
 ]
 
 const LEGACY_THEME_LIST = [
-  'ambiance',
-  'chaos',
-  'chrome',
-  'clouds',
-  'clouds_midnight',
-  'crimson_editor',
-  'dawn',
-  'dreamweaver',
-  'github',
-  'gob',
-  'gruvbox',
-  'idle_fingers',
-  'iplastic',
-  'katzenmilch',
-  'kr_theme',
-  'kuroir',
-  'merbivore',
-  'merbivore_soft',
-  'mono_industrial',
-  'nord_dark',
-  'pastel_on_dark',
-  'solarized_dark',
-  'solarized_light',
-  'sqlserver',
-  'terminal',
-  'tomorrow',
-  'tomorrow_night',
-  'tomorrow_night_blue',
-  'tomorrow_night_bright',
-  'tomorrow_night_eighties',
-  'twilight',
-  'vibrant_ink',
-  'xcode',
+  { name: 'ambiance', dark: true },
+  { name: 'chaos', dark: true },
+  { name: 'chrome', dark: false },
+  { name: 'clouds', dark: false },
+  { name: 'clouds_midnight', dark: true },
+  { name: 'crimson_editor', dark: false },
+  { name: 'dawn', dark: false },
+  { name: 'dreamweaver', dark: false },
+  { name: 'github', dark: false },
+  { name: 'gob', dark: true },
+  { name: 'gruvbox', dark: true },
+  { name: 'idle_fingers', dark: true },
+  { name: 'iplastic', dark: false },
+  { name: 'katzenmilch', dark: false },
+  { name: 'kr_theme', dark: true },
+  { name: 'kuroir', dark: false },
+  { name: 'merbivore', dark: true },
+  { name: 'merbivore_soft', dark: true },
+  { name: 'mono_industrial', dark: true },
+  { name: 'nord_dark', dark: true },
+  { name: 'pastel_on_dark', dark: true },
+  { name: 'solarized_dark', dark: true },
+  { name: 'solarized_light', dark: false },
+  { name: 'sqlserver', dark: false },
+  { name: 'terminal', dark: true },
+  { name: 'tomorrow', dark: false },
+  { name: 'tomorrow_night', dark: true },
+  { name: 'tomorrow_night_blue', dark: true },
+  { name: 'tomorrow_night_bright', dark: true },
+  { name: 'tomorrow_night_eighties', dark: true },
+  { name: 'twilight', dark: true },
+  { name: 'vibrant_ink', dark: true },
+  { name: 'xcode', dark: false },
 ]
 
 const ProjectController = {

@@ -1,7 +1,7 @@
 import logger from '@overleaf/logger'
 import crypto from 'node:crypto'
 import settings from '@overleaf/settings'
-import Modules from '../../infrastructure/Modules.js'
+import Modules from '../../infrastructure/Modules.mjs'
 import mongodb from 'mongodb-legacy'
 import { Subscription } from '../../models/Subscription.mjs'
 import { SSOConfig } from '../../models/SSOConfig.mjs'
@@ -29,7 +29,7 @@ async function getInvite(token) {
   return { invite, subscription }
 }
 
-async function createInvite(teamManagerId, subscription, email) {
+async function createInvite(teamManagerId, subscription, email, auditLog) {
   email = EmailHelper.parseEmail(email)
   if (!email) {
     throw new Error('invalid email')
@@ -37,7 +37,7 @@ async function createInvite(teamManagerId, subscription, email) {
   const teamManager = await UserGetter.promises.getUser(teamManagerId)
 
   await _removeLegacyInvite(subscription.id, email)
-  return _createInvite(subscription, email, teamManager)
+  return _createInvite(subscription, email, teamManager, auditLog)
 }
 
 async function importInvite(subscription, inviterName, email, token, sentAt) {
@@ -87,6 +87,14 @@ async function _deleteUserSubscription(subscription, userId, ipAddress) {
   }
 }
 
+async function removeTeamInviteAndNotification(subscriptionId, userId, email) {
+  await _removeInviteFromTeam(subscriptionId, email)
+
+  await NotificationsBuilder.promises
+    .groupInvitation(userId, subscriptionId, false)
+    .read()
+}
+
 async function acceptInvite(token, userId, ipAddress) {
   const { invite, subscription } = await getInvite(token)
   if (!invite) {
@@ -132,11 +140,7 @@ async function acceptInvite(token, userId, ipAddress) {
     }
   }
 
-  await _removeInviteFromTeam(subscription.id, invite.email)
-
-  await NotificationsBuilder.promises
-    .groupInvitation(userId, subscription._id, false)
-    .read()
+  await removeTeamInviteAndNotification(subscription._id, userId, invite.email)
 
   return subscription
 }
@@ -171,7 +175,8 @@ async function createTeamInvitesForLegacyInvitedEmail(email) {
   )
 }
 
-async function _createInvite(subscription, email, inviter) {
+async function _createInvite(subscription, email, inviter, auditLog) {
+  const { domainCaptureEnabled, managedUsersEnabled } = subscription
   const { possible, reason } = await _checkIfInviteIsPossible(
     subscription,
     email
@@ -231,32 +236,79 @@ async function _createInvite(subscription, email, inviter) {
     invite = invite.toObject()
     invite.sentAt = new Date()
   } else {
-    invite = {
-      email,
-      inviterName,
-      token: crypto.randomBytes(32).toString('hex'),
-      sentAt: new Date(),
+    if (domainCaptureEnabled) {
+      invite = {
+        email,
+        inviterName,
+        sentAt: new Date(),
+        domainCapture: true,
+      }
+    } else {
+      invite = {
+        email,
+        inviterName,
+        token: crypto.randomBytes(32).toString('hex'),
+        sentAt: new Date(),
+      }
     }
+
     subscription.teamInvites.push(invite)
   }
 
-  try {
-    await _sendNotificationToExistingUser(
-      subscription,
-      email,
-      invite,
-      subscription.managedUsersEnabled
-    )
-  } catch (err) {
-    logger.error(
-      { err },
-      'Failed to send notification to existing user when creating group invitation'
-    )
+  if (!domainCaptureEnabled) {
+    // no need to create notification when domain capture is enabled since
+    // dash will show one on page load for non-managed groups, and for managed groups
+    // dash is not loadable until user joins the group
+    try {
+      await _sendNotificationToExistingUser(
+        subscription,
+        email,
+        invite,
+        subscription.managedUsersEnabled
+      )
+    } catch (err) {
+      logger.error(
+        { err },
+        'Failed to send notification to existing user when creating group invitation'
+      )
+    }
   }
 
   await subscription.save()
 
   if (subscription.managedUsersEnabled) {
+    const auditLogData = {
+      initiatorId: auditLog?.initiatorId,
+      ipAddress: auditLog?.ipAddress,
+      groupId: subscription._id,
+      operation: 'group-invite-sent',
+      info: { invitedEmail: email },
+    }
+
+    try {
+      await Modules.promises.hooks.fire('addGroupAuditLogEntry', auditLogData)
+    } catch (error) {
+      logger.error(
+        { error, auditLog },
+        'Error adding group audit log entry for group-invite-sent'
+      )
+    }
+  }
+
+  let acceptInviteUrl
+  if (domainCaptureEnabled) {
+    const samlInitPath = (
+      await Modules.promises.hooks.fire(
+        'getGroupSSOInitPath',
+        subscription,
+        email
+      )
+    )?.[0]
+    acceptInviteUrl = `${settings.siteUrl}${samlInitPath}`
+  } else {
+    acceptInviteUrl = `${settings.siteUrl}/subscription/invites/${invite.token}/`
+  }
+  if (managedUsersEnabled) {
     let admin = {}
     try {
       admin = await SubscriptionLocator.promises.getAdminEmailAndName(
@@ -272,7 +324,7 @@ async function _createInvite(subscription, email, inviter) {
       to: email,
       admin,
       inviter,
-      acceptInviteUrl: `${settings.siteUrl}/subscription/invites/${invite.token}/`,
+      acceptInviteUrl,
       appName: settings.appName,
     }
 
@@ -291,10 +343,9 @@ async function _createInvite(subscription, email, inviter) {
     const opts = {
       to: email,
       inviter,
-      acceptInviteUrl: `${settings.siteUrl}/subscription/invites/${invite.token}/`,
+      acceptInviteUrl,
       appName: settings.appName,
     }
-
     await EmailHandler.promises.sendEmail('verifyEmailToJoinTeam', opts)
   }
 
@@ -406,6 +457,7 @@ export default {
     createInvite,
     importInvite,
     acceptInvite,
+    removeTeamInviteAndNotification,
     revokeInvite,
     createTeamInvitesForLegacyInvitedEmail,
   },

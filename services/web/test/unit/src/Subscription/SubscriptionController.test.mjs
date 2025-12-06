@@ -1,10 +1,10 @@
 import { vi, assert, expect } from 'vitest'
 import sinon from 'sinon'
-import MockRequest from '../helpers/MockRequest.js'
-import MockResponse from '../helpers/MockResponse.js'
-import SubscriptionErrors from '../../../../app/src/Features/Subscription/Errors.js'
+import MockRequest from '../helpers/MockRequest.mjs'
+import MockResponse from '../helpers/MockResponse.mjs'
+import SubscriptionErrors from '../../../../app/src/Features/Subscription/Errors.mjs'
 import SubscriptionHelper from '../../../../app/src/Features/Subscription/SubscriptionHelper.mjs'
-import { AI_ADD_ON_CODE } from '../../../../app/src/Features/Subscription/AiHelper.js'
+import { AI_ADD_ON_CODE } from '../../../../app/src/Features/Subscription/AiHelper.mjs'
 
 const modulePath =
   '../../../../app/src/Features/Subscription/SubscriptionController.mjs'
@@ -375,8 +375,8 @@ describe('SubscriptionController', function () {
 
     ctx.SubscriptionController = (await import(modulePath)).default
 
-    ctx.res = new MockResponse()
-    ctx.req = new MockRequest()
+    ctx.res = new MockResponse(vi)
+    ctx.req = new MockRequest(vi)
     ctx.req.body = {}
     ctx.req.query = { planCode: '123123' }
 
@@ -658,8 +658,8 @@ describe('SubscriptionController', function () {
 
   describe('pauseSubscription', function () {
     it('should throw an error if no pause length is provided', async function (ctx) {
-      ctx.res = new MockResponse()
-      ctx.req = new MockRequest()
+      ctx.res = new MockResponse(vi)
+      ctx.req = new MockRequest(vi)
       ctx.next = sinon.stub()
       await expect(
         ctx.SubscriptionController.pauseSubscription(ctx.req, ctx.res, ctx.next)
@@ -667,8 +667,8 @@ describe('SubscriptionController', function () {
     })
 
     it('should throw an error if an invalid pause length is provided', async function (ctx) {
-      ctx.res = new MockResponse()
-      ctx.req = new MockRequest()
+      ctx.res = new MockResponse(vi)
+      ctx.req = new MockRequest(vi)
       ctx.req.params = { pauseCycles: '-10' }
       ctx.next = sinon.stub()
       await ctx.SubscriptionController.pauseSubscription(
@@ -680,8 +680,8 @@ describe('SubscriptionController', function () {
     })
 
     it('should return a 200 when requesting a pause', async function (ctx) {
-      ctx.res = new MockResponse()
-      ctx.req = new MockRequest()
+      ctx.res = new MockResponse(vi)
+      ctx.req = new MockRequest(vi)
       ctx.req.params = { pauseCycles: '3' }
       ctx.next = sinon.stub()
       await ctx.SubscriptionController.pauseSubscription(
@@ -695,8 +695,8 @@ describe('SubscriptionController', function () {
 
   describe('resumeSubscription', function () {
     it('should return a 200 when resuming a subscription', async function (ctx) {
-      ctx.res = new MockResponse()
-      ctx.req = new MockRequest()
+      ctx.res = new MockResponse(vi)
+      ctx.req = new MockRequest(vi)
       ctx.next = sinon.stub()
       await ctx.SubscriptionController.resumeSubscription(
         ctx.req,
@@ -1066,7 +1066,7 @@ describe('SubscriptionController', function () {
       expect(
         ctx.FeaturesUpdater.promises.refreshFeatures
       ).to.have.been.calledWith(ctx.user._id, 'add-on-purchase')
-      expect(ctx.res.sendStatus).to.have.been.calledWith(200)
+      expect(ctx.res.sendStatus).toHaveBeenCalledWith(200)
     })
 
     it('should handle PaymentActionRequiredError and return 402 with details', async function (ctx) {
@@ -1079,14 +1079,12 @@ describe('SubscriptionController', function () {
 
       await ctx.SubscriptionController.purchaseAddon(ctx.req, ctx.res, ctx.next)
 
-      ctx.res.status.calledWith(402).should.equal(true)
-      ctx.res.json
-        .calledWith({
-          message: 'Payment action required',
-          clientSecret: 'secret123',
-          publicKey: 'pubkey456',
-        })
-        .should.equal(true)
+      expect(ctx.res.status).toHaveBeenCalledWith(402)
+      expect(ctx.res.json).toHaveBeenCalledWith({
+        message: 'Payment action required',
+        clientSecret: 'secret123',
+        publicKey: 'pubkey456',
+      })
 
       expect(ctx.FeaturesUpdater.promises.refreshFeatures).to.not.have.been
         .called
@@ -1123,6 +1121,57 @@ describe('SubscriptionController', function () {
           { addon: 'assistant' }
         )
       ).to.be.true
+    })
+  })
+
+  describe('removeAddon', function () {
+    beforeEach(function (ctx) {
+      ctx.SessionManager.getSessionUser.returns(ctx.user)
+      ctx.next = sinon.stub()
+      ctx.req.params = { addOnCode: AI_ADD_ON_CODE }
+      ctx.SubscriptionHandler.promises.removeAddon = sinon.stub().resolves()
+    })
+
+    it('should return 200 on successful removal of AI add-on', async function (ctx) {
+      ctx.res.sendStatus = sinon.spy()
+
+      await ctx.SubscriptionController.removeAddon(ctx.req, ctx.res, ctx.next)
+
+      expect(ctx.SubscriptionHandler.promises.removeAddon).to.have.been.called
+      expect(
+        ctx.SubscriptionHandler.promises.removeAddon
+      ).to.have.been.calledWith(ctx.user, AI_ADD_ON_CODE)
+      expect(ctx.res.sendStatus).to.have.been.calledWith(200)
+      expect(ctx.logger.debug).to.have.been.calledWith(
+        { userId: ctx.user._id, addOnCode: AI_ADD_ON_CODE },
+        'removing add-ons'
+      )
+    })
+
+    it('should return 404 if the add-on code is not AI_ADD_ON_CODE', async function (ctx) {
+      ctx.req.params = { addOnCode: 'some-other-addon' }
+      ctx.res.sendStatus = sinon.spy()
+
+      await ctx.SubscriptionController.removeAddon(ctx.req, ctx.res, ctx.next)
+
+      expect(ctx.SubscriptionHandler.promises.removeAddon).to.not.have.been
+        .called
+      expect(ctx.res.sendStatus).to.have.been.calledWith(404)
+    })
+
+    it('should handle AddOnNotPresentError and send badRequest', async function (ctx) {
+      ctx.SubscriptionHandler.promises.removeAddon.rejects(
+        new SubscriptionErrors.AddOnNotPresentError()
+      )
+
+      await ctx.SubscriptionController.removeAddon(ctx.req, ctx.res, ctx.next)
+
+      expect(ctx.HttpErrorHandler.badRequest).to.have.been.calledWith(
+        ctx.req,
+        ctx.res,
+        'Your subscription does not contain the requested add-on',
+        { addon: AI_ADD_ON_CODE }
+      )
     })
   })
 
@@ -1452,10 +1501,10 @@ describe('SubscriptionController', function () {
 
   describe('previewAddonPurchase', function () {
     beforeEach(function (ctx) {
-      ctx.req = new MockRequest()
+      ctx.req = new MockRequest(vi)
       ctx.req.params = { addOnCode: 'assistant' }
       ctx.req.query = { purchaseReferrer: 'fake-referrer' }
-      ctx.res = new MockResponse()
+      ctx.res = new MockResponse(vi)
 
       ctx.Modules.promises.hooks.fire
         .withArgs('getPaymentMethod')

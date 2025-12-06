@@ -1,24 +1,38 @@
 import { materialIcon } from '@/features/utils/material-icon'
+import classNames from 'classnames'
+import '@phosphor-icons/webcomponents/PhWarningCircle'
+import { ciamIcon } from '@/features/utils/ciam-icon'
 
 export default function inputValidator(
   inputEl: HTMLInputElement | HTMLTextAreaElement
 ) {
+  const isDsBranded = inputEl.classList.contains('form-control-ds')
   const messageEl = document.createElement('div')
   messageEl.className =
     inputEl.getAttribute('data-ol-validation-message-classes') ||
-    'small text-danger mt-2 form-text'
+    classNames(
+      'small text-danger mt-2 form-text',
+
+      { 'form-text-ds': isDsBranded }
+    )
   messageEl.hidden = true
 
   const messageInnerEl = messageEl.appendChild(document.createElement('span'))
-  messageInnerEl.className = 'form-text-inner'
+  messageInnerEl.className = classNames('form-text-inner', {
+    'form-text-inner-ds': isDsBranded,
+  })
 
   const messageTextNode = document.createTextNode('')
 
-  const iconEl = materialIcon('error')
+  const iconEl = isDsBranded
+    ? ciamIcon('error', 'ciam-form-text-icon')
+    : materialIcon('error')
   messageInnerEl.append(iconEl)
   messageInnerEl.append(messageTextNode)
 
-  inputEl.insertAdjacentElement('afterend', messageEl)
+  const inputContainerEl =
+    inputEl.closest('.form-complex-input-container') || inputEl
+  inputContainerEl.insertAdjacentElement('afterend', messageEl)
 
   // Hide messages until the user leaves the input field or submits the form.
   let canDisplayErrorMessages = false

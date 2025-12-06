@@ -10,29 +10,29 @@ import Settings from '@overleaf/settings'
 import logger from '@overleaf/logger'
 import GeoIpLookup from '../../infrastructure/GeoIpLookup.mjs'
 import FeaturesUpdater from './FeaturesUpdater.mjs'
-import GroupPlansData from './GroupPlansData.js'
+import GroupPlansData from './GroupPlansData.mjs'
 import V1SubscriptionManager from './V1SubscriptionManager.mjs'
 import AnalyticsManager from '../Analytics/AnalyticsManager.mjs'
 import RecurlyEventHandler from './RecurlyEventHandler.mjs'
 import { expressify } from '@overleaf/promise-utils'
 import OError from '@overleaf/o-error'
-import Errors from './Errors.js'
+import Errors from './Errors.mjs'
 import SplitTestHandler from '../SplitTests/SplitTestHandler.mjs'
 import AuthorizationManager from '../Authorization/AuthorizationManager.mjs'
-import Modules from '../../infrastructure/Modules.js'
+import Modules from '../../infrastructure/Modules.mjs'
 import async from 'async'
 import HttpErrorHandler from '../Errors/HttpErrorHandler.mjs'
 import RecurlyClient from './RecurlyClient.mjs'
 import {
   AI_ADD_ON_CODE,
   subscriptionChangeIsAiAssistUpgrade,
-} from './AiHelper.js'
+} from './AiHelper.mjs'
 import PlansLocator from './PlansLocator.mjs'
 import { User } from '../../models/User.mjs'
 import UserGetter from '../User/UserGetter.mjs'
 import PermissionsManager from '../Authorization/PermissionsManager.mjs'
 import { sanitizeSessionUserForFrontEnd } from '../../infrastructure/FrontEndUser.mjs'
-import { z, validateReq } from '../../infrastructure/Validation.js'
+import { z, validateReq } from '../../infrastructure/Validation.mjs'
 import { IndeterminateInvoiceError } from '../Errors/Errors.js'
 import SubscriptionLocator from './SubscriptionLocator.mjs'
 
@@ -726,7 +726,7 @@ async function removeAddon(req, res, next) {
   logger.debug({ userId: user._id, addOnCode }, 'removing add-ons')
 
   try {
-    await SubscriptionHandler.promises.removeAddon(user._id, addOnCode)
+    await SubscriptionHandler.promises.removeAddon(user, addOnCode)
     res.sendStatus(200)
   } catch (err) {
     if (err instanceof AddOnNotPresentError) {

@@ -1,6 +1,6 @@
 import Settings from '@overleaf/settings'
-import mongoose from '../infrastructure/Mongoose.js'
-import TokenGenerator from '../Features/TokenGenerator/TokenGenerator.js'
+import mongoose from '../infrastructure/Mongoose.mjs'
+import TokenGenerator from '../Features/TokenGenerator/TokenGenerator.mjs'
 const { Schema } = mongoose
 const { ObjectId } = Schema
 
@@ -100,7 +100,12 @@ export const UserSchema = new Schema(
       mathPreview: { type: Boolean, default: true },
       breadcrumbs: { type: Boolean, default: true },
       referencesSearchMode: { type: String, default: 'advanced' }, // 'advanced' or 'simple'
+      // enableNewEditor is being phased out in favor of enableNewEditorStageFour
+      // when moving the new editor to opt out (stage 4). However, we need to keep the
+      // old field for determining whether to show promotional material to users.
       enableNewEditor: { type: Boolean },
+      enableNewEditorStageFour: { type: Boolean },
+      darkModePdf: { type: Boolean, default: false },
     },
     features: {
       collaborators: {

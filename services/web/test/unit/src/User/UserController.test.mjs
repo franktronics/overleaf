@@ -8,6 +8,14 @@ vi.mock('../../../../app/src/Features/Errors/Errors.js', () => {
   return vi.importActual('../../../../app/src/Features/Errors/Errors.js')
 })
 
+vi.mock('../../../../app/src/infrastructure/Metrics.js', () => ({
+  default: {
+    analyticsQueue: {
+      inc: vi.fn(),
+    },
+  },
+}))
+
 describe('UserController', function () {
   beforeEach(async function (ctx) {
     ctx.user_id = '323123'
@@ -120,6 +128,7 @@ describe('UserController', function () {
       promises: {
         addEntry: sinon.stub().resolves(),
       },
+      addEntryInBackground: sinon.stub(),
     }
 
     ctx.RequestContentTypeDetection = {
@@ -139,6 +148,12 @@ describe('UserController', function () {
         hooks: {
           fire: sinon.stub().resolves(),
         },
+      },
+    }
+
+    ctx.SplitTestHandler = {
+      promises: {
+        getAssignment: sinon.stub().resolves({ variant: 'default' }),
       },
     }
 
@@ -237,6 +252,13 @@ describe('UserController', function () {
     vi.doMock('../../../../app/src/infrastructure/Modules', () => ({
       default: ctx.Modules,
     }))
+
+    vi.doMock(
+      '../../../../app/src/Features/SplitTests/SplitTestHandler.mjs',
+      () => ({
+        default: ctx.SplitTestHandler,
+      })
+    )
 
     ctx.UserController = (await import(modulePath)).default
 
@@ -564,33 +586,115 @@ describe('UserController', function () {
       })
     })
 
-    it('should set enableNewEditor to true', function (ctx) {
+    describe('when editor-redesign-opt-out is set to default', function () {
+      beforeEach(function (ctx) {
+        ctx.SplitTestHandler.promises.getAssignment.resolves({
+          variant: 'default',
+        })
+      })
+
+      it('should set enableNewEditor to true', function (ctx) {
+        return new Promise(resolve => {
+          ctx.req.body = { enableNewEditor: true }
+          ctx.res.sendStatus = code => {
+            ctx.user.ace.enableNewEditor.should.equal(true)
+            resolve()
+          }
+          ctx.UserController.updateUserSettings(ctx.req, ctx.res)
+        })
+      })
+
+      it('should set enableNewEditor to false', function (ctx) {
+        return new Promise(resolve => {
+          ctx.req.body = { enableNewEditor: false }
+          ctx.res.sendStatus = code => {
+            ctx.user.ace.enableNewEditor.should.equal(false)
+            resolve()
+          }
+          ctx.UserController.updateUserSettings(ctx.req, ctx.res)
+        })
+      })
+
+      it('should keep enableNewEditor a boolean', function (ctx) {
+        return new Promise(resolve => {
+          ctx.req.body = { enableNewEditor: 'foobar' }
+          ctx.res.sendStatus = code => {
+            ctx.user.ace.enableNewEditor.should.equal(true)
+            resolve()
+          }
+          ctx.UserController.updateUserSettings(ctx.req, ctx.res)
+        })
+      })
+    })
+
+    describe('when editor-redesign-opt-out is set to enabled', function () {
+      beforeEach(function (ctx) {
+        ctx.SplitTestHandler.promises.getAssignment.resolves({
+          variant: 'enabled',
+        })
+      })
+
+      it('should set enableNewEditorStageFour to true', function (ctx) {
+        return new Promise(resolve => {
+          ctx.req.body = { enableNewEditor: true }
+          ctx.res.sendStatus = code => {
+            ctx.user.ace.enableNewEditorStageFour.should.equal(true)
+            resolve()
+          }
+          ctx.UserController.updateUserSettings(ctx.req, ctx.res)
+        })
+      })
+
+      it('should set enableNewEditorStageFour to false', function (ctx) {
+        return new Promise(resolve => {
+          ctx.req.body = { enableNewEditor: false }
+          ctx.res.sendStatus = code => {
+            ctx.user.ace.enableNewEditorStageFour.should.equal(false)
+            resolve()
+          }
+          ctx.UserController.updateUserSettings(ctx.req, ctx.res)
+        })
+      })
+
+      it('should keep enableNewEditorStageFour a boolean', function (ctx) {
+        return new Promise(resolve => {
+          ctx.req.body = { enableNewEditor: 'foobar' }
+          ctx.res.sendStatus = code => {
+            ctx.user.ace.enableNewEditorStageFour.should.equal(true)
+            resolve()
+          }
+          ctx.UserController.updateUserSettings(ctx.req, ctx.res)
+        })
+      })
+    })
+
+    it('should set darkModePdf to true', function (ctx) {
       return new Promise(resolve => {
-        ctx.req.body = { enableNewEditor: true }
+        ctx.req.body = { darkModePdf: true }
         ctx.res.sendStatus = code => {
-          ctx.user.ace.enableNewEditor.should.equal(true)
+          ctx.user.ace.darkModePdf.should.equal(true)
           resolve()
         }
         ctx.UserController.updateUserSettings(ctx.req, ctx.res)
       })
     })
 
-    it('should set enableNewEditor to false', function (ctx) {
+    it('should set darkModePdf to false', function (ctx) {
       return new Promise(resolve => {
-        ctx.req.body = { enableNewEditor: false }
+        ctx.req.body = { darkModePdf: false }
         ctx.res.sendStatus = code => {
-          ctx.user.ace.enableNewEditor.should.equal(false)
+          ctx.user.ace.darkModePdf.should.equal(false)
           resolve()
         }
         ctx.UserController.updateUserSettings(ctx.req, ctx.res)
       })
     })
 
-    it('should keep enableNewEditor a boolean', function (ctx) {
+    it('should keep darkModePdf a boolean', function (ctx) {
       return new Promise(resolve => {
-        ctx.req.body = { enableNewEditor: 'foobar' }
+        ctx.req.body = { darkModePdf: 'foobar' }
         ctx.res.sendStatus = code => {
-          ctx.user.ace.enableNewEditor.should.equal(true)
+          ctx.user.ace.darkModePdf.should.equal(true)
           resolve()
         }
         ctx.UserController.updateUserSettings(ctx.req, ctx.res)

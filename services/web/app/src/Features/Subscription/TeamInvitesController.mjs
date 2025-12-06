@@ -12,8 +12,8 @@ import { expressify } from '@overleaf/promise-utils'
 import HttpErrorHandler from '../Errors/HttpErrorHandler.mjs'
 import PermissionsManager from '../Authorization/PermissionsManager.mjs'
 import EmailHandler from '../Email/EmailHandler.mjs'
-import { RateLimiter } from '../../infrastructure/RateLimiter.js'
-import Modules from '../../infrastructure/Modules.js'
+import { RateLimiter } from '../../infrastructure/RateLimiter.mjs'
+import Modules from '../../infrastructure/Modules.mjs'
 import UserAuditLogHandler from '../User/UserAuditLogHandler.mjs'
 import { sanitizeSessionUserForFrontEnd } from '../../infrastructure/FrontEndUser.mjs'
 
@@ -269,11 +269,25 @@ async function resendInvite(req, res, next) {
     return await createInvite(req, res)
   }
 
+  let acceptInviteUrl
+  if (subscription.domainCaptureEnabled) {
+    const samlInitPath = (
+      await Modules.promises.hooks.fire(
+        'getGroupSSOInitPath',
+        subscription,
+        userEmail
+      )
+    )?.[0]
+    acceptInviteUrl = `${settings.siteUrl}${samlInitPath}`
+  } else {
+    acceptInviteUrl = `${settings.siteUrl}/subscription/invites/${currentInvite.token}/`
+  }
+
   const opts = {
     to: userEmail,
     admin: subscription.admin_id,
     inviter: currentInvite.inviterName,
-    acceptInviteUrl: `${settings.siteUrl}/subscription/invites/${currentInvite.token}/`,
+    acceptInviteUrl,
     reminder: true,
   }
 

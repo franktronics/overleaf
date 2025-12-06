@@ -10,7 +10,7 @@ import ProjectRootDocManager from '../Project/ProjectRootDocManager.mjs'
 import FileTypeManager from '../Uploads/FileTypeManager.mjs'
 import CooldownManager from '../Cooldown/CooldownManager.mjs'
 import Errors from '../Errors/Errors.js'
-import Modules from '../../infrastructure/Modules.js'
+import Modules from '../../infrastructure/Modules.mjs'
 
 async function newUpdate(
   userId,
@@ -107,7 +107,11 @@ async function findProjectByIdWithRWAccess(userId, projectId) {
   for (const projects of [allProjects.owned, allProjects.readAndWrite]) {
     for (const project of projects) {
       if (project._id.toString() === projectId) {
-        return project
+        if (ProjectHelper.isArchivedOrTrashed(project, userId)) {
+          return null
+        } else {
+          return project
+        }
       }
     }
   }

@@ -81,6 +81,8 @@ class SAMLCommonsUnavailable extends OError {
   }
 }
 
+class SAMLDomainCaptureError extends OError {}
+
 class SAMLIdentityExistsError extends OError {
   get i18nKey() {
     return 'institution_account_tried_to_add_already_registered'
@@ -187,6 +189,16 @@ class SAMLEmailNotRecognizedError extends SAMLAuthenticationError {
 }
 
 class SAMLDomainCaptureRegisterError extends SAMLAuthenticationError {}
+
+class SAMLRequestDeniedError extends SAMLAuthenticationError {
+  get i18nKey() {
+    return 'saml_request_denied_error'
+  }
+}
+
+class SAMLDomainCaptureManagedUserMissingEmailError extends OError {}
+
+class SAMLDomainCaptureManagedOptInUserMissingEmailError extends SAMLDomainCaptureError {}
 
 class SAMLSessionDataMissing extends BackwardCompatibleError {
   constructor(arg) {
@@ -349,6 +361,7 @@ module.exports = {
   SAMLAssertionAudienceMismatch,
   SAMLAuthenticationRequiredError,
   SAMLCommonsUnavailable,
+  SAMLDomainCaptureError,
   SAMLIdentityExistsError,
   SAMLAlreadyLinkedError,
   SAMLEmailNotAffiliatedError,
@@ -369,7 +382,10 @@ module.exports = {
   SAMLLoginFailureError,
   SAMLEmailNotRecognizedError,
   SAMLResponseAlreadyProcessedError,
+  SAMLRequestDeniedError,
   SAMLDomainCaptureRegisterError,
+  SAMLDomainCaptureManagedUserMissingEmailError,
+  SAMLDomainCaptureManagedOptInUserMissingEmailError,
   SLInV2Error,
   ThirdPartyIdentityExistsError,
   ThirdPartyUserNotFoundError,
