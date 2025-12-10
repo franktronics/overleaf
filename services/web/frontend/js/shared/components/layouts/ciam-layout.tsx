@@ -1,5 +1,6 @@
 import React, { FC, ReactNode } from 'react'
 import { Trans } from 'react-i18next'
+import * as eventTracking from '@/infrastructure/event-tracking'
 import dsLogo from '@/shared/svgs/digital-science.svg'
 
 type Props = { children: ReactNode }
@@ -17,16 +18,52 @@ const CiamLayout: FC<Props> = ({ children }: Props) => (
         <section className="ciam-card-footer">
           <hr className="ciam-card-separator" />
           <div className="ciam-footer-ds-logo">
-            <img src={dsLogo} alt="Digital Science — home" />
+            <a
+              href="https://www.digital-science.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ciam-image-link"
+              onClick={() =>
+                eventTracking.sendMB('unified-access-footer-click', {
+                  product: 'overleaf',
+                  item: 'logo',
+                  destinationUrl: 'https://www.digital-science.com/',
+                })
+              }
+            >
+              <img src={dsLogo} alt="Digital Science — home" />
+            </a>
           </div>
           <p>
             <Trans
               i18nKey="advancing_research_with"
               components={[
                 // eslint-disable-next-line jsx-a11y/anchor-has-content,react/jsx-key
-                <a href="https://www.overleaf.com" />,
+                <a
+                  href="https://www.overleaf.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() =>
+                    eventTracking.sendMB('unified-access-footer-click', {
+                      product: 'overleaf',
+                      item: 'overleaf',
+                      destinationUrl: 'https://www.overleaf.com/',
+                    })
+                  }
+                />,
                 // eslint-disable-next-line jsx-a11y/anchor-has-content,react/jsx-key
-                <a href="https://www.papersapp.com/" />,
+                <a
+                  href="https://www.papersapp.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() =>
+                    eventTracking.sendMB('unified-access-footer-click', {
+                      product: 'overleaf',
+                      item: 'papers',
+                      destinationUrl: 'https://www.papersapp.com/',
+                    })
+                  }
+                />,
               ]}
             />
           </p>
