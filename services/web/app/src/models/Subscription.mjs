@@ -1,8 +1,33 @@
 import mongoose from '../infrastructure/Mongoose.mjs'
 import { TeamInviteSchema } from './TeamInvite.mjs'
+import { callbackify } from '@overleaf/promise-utils'
 
 const { Schema } = mongoose
 const { ObjectId } = Schema
+
+const PaymentProvider = {
+  service: {
+    type: String,
+  },
+  subscriptionId: {
+    type: String,
+  },
+  state: {
+    type: String,
+  },
+  pausePeriodStart: {
+    type: Date,
+  },
+  pausePeriodEnd: {
+    type: Date,
+  },
+  trialStartedAt: {
+    type: Date,
+  },
+  trialEndsAt: {
+    type: Date,
+  },
+}
 
 export const SubscriptionSchema = new Schema(
   {
@@ -68,29 +93,8 @@ export const SubscriptionSchema = new Schema(
         type: Date,
       },
     },
-    paymentProvider: {
-      service: {
-        type: String,
-      },
-      subscriptionId: {
-        type: String,
-      },
-      state: {
-        type: String,
-      },
-      pausePeriodStart: {
-        type: Date,
-      },
-      pausePeriodEnd: {
-        type: Date,
-      },
-      trialStartedAt: {
-        type: Date,
-      },
-      trialEndsAt: {
-        type: Date,
-      },
-    },
+    paymentProvider: PaymentProvider,
+    previousPaymentProvider: PaymentProvider,
     collectionMethod: {
       type: String,
       enum: ['automatic', 'manual'],
@@ -120,8 +124,11 @@ export const SubscriptionSchema = new Schema(
 )
 
 // Subscriptions have no v1 data to fetch
-SubscriptionSchema.method('fetchV1Data', function (callback) {
-  callback(null, this)
-})
+async function fetchV1DataPromise() {
+  return this
+}
+SubscriptionSchema.method('fetchV1Data', callbackify(fetchV1DataPromise))
+
+SubscriptionSchema.method('fetchV1DataPromise', fetchV1DataPromise)
 
 export const Subscription = mongoose.model('Subscription', SubscriptionSchema)

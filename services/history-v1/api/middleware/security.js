@@ -5,7 +5,7 @@ const config = require('config')
 const HTTPStatus = require('http-status')
 const jwt = require('jsonwebtoken')
 const tsscmp = require('tsscmp')
-const { validateReq } = require('@overleaf/validation-tools')
+const { parseReq } = require('@overleaf/validation-tools')
 const schemas = require('../schema')
 
 function hasValidBasicAuthCredentials(req) {
@@ -47,6 +47,19 @@ function setupSSL(app) {
 }
 
 exports.setupSSL = setupSSL
+
+function setupBasicHttpAuthForSwaggerDocs(app) {
+  app.use('/docs', function (req, res, next) {
+    if (hasValidBasicAuthCredentials(req)) {
+      return next()
+    }
+
+    res.header('WWW-Authenticate', 'Basic realm="Application"')
+    res.status(HTTPStatus.UNAUTHORIZED).end()
+  })
+}
+
+exports.setupBasicHttpAuthForSwaggerDocs = setupBasicHttpAuthForSwaggerDocs
 
 function configureJWTAuth(mode = 'jwt') {
   return function handleJWTAuth(req, res, next) {
@@ -90,7 +103,7 @@ function configureJWTAuth(mode = 'jwt') {
       throw error
     }
 
-    const { params } = validateReq(req, schemas.projectId)
+    const { params } = parseReq(req, schemas.projectId)
     if (decoded.project_id.toString() !== params.project_id.toString()) {
       const err = new Error('Wrong project_id')
       err.statusCode = HTTPStatus.FORBIDDEN

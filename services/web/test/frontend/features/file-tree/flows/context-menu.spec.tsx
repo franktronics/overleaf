@@ -37,7 +37,7 @@ describe('FileTree Context Menu Flow', function () {
     )
 
     cy.findByRole('menu').should('not.exist')
-    cy.findByRole('button', { name: 'main.tex' }).trigger('contextmenu')
+    cy.findByRole('treeitem', { name: 'main.tex' }).trigger('contextmenu')
     cy.findByRole('menu')
   })
 
@@ -73,9 +73,9 @@ describe('FileTree Context Menu Flow', function () {
     )
 
     cy.findByRole('menu').should('not.exist')
-    cy.findByRole('button', { name: 'main.tex' }).trigger('contextmenu')
+    cy.findByRole('treeitem', { name: 'main.tex' }).trigger('contextmenu')
     cy.findByRole('menu')
-    cy.findAllByRole('button', { name: 'foo.tex' }).click()
+    cy.findAllByRole('treeitem', { name: 'foo.tex' }).click()
     cy.findByRole('menu').should('not.exist')
   })
 
@@ -108,7 +108,69 @@ describe('FileTree Context Menu Flow', function () {
       </EditorProviders>
     )
 
-    cy.findAllByRole('button', { name: 'main.tex' }).trigger('contextmenu')
+    cy.findAllByRole('treeitem', { name: 'main.tex' }).trigger('contextmenu')
     cy.findByRole('menu').should('not.exist')
+  })
+
+  it('shows "set main document" item when appropriate', function () {
+    const rootFolder = [
+      {
+        _id: 'root-folder-id',
+        name: 'rootFolder',
+        docs: [
+          { _id: 'main-doc', name: 'main.tex' },
+          { _id: 'other-doc', name: 'other.tex' },
+        ],
+        folders: [],
+        fileRefs: [],
+      },
+    ]
+
+    cy.mount(
+      <EditorProviders
+        rootFolder={rootFolder as any}
+        projectId="123abc"
+        rootDocId="main-doc"
+      >
+        <FileTreeRoot
+          refProviders={{}}
+          setRefProviderEnabled={cy.stub()}
+          setStartedFreeTrial={cy.stub()}
+          onSelect={cy.stub()}
+          onInit={cy.stub()}
+          isConnected
+        />
+      </EditorProviders>
+    )
+
+    cy.findByRole('menu').should('not.exist')
+
+    // main.tex is already the main document
+    cy.findByRole('treeitem', { name: 'main.tex' }).trigger('contextmenu')
+    cy.findByRole('menu')
+      .findByRole('menuitem', { name: 'Set as main document' })
+      .should('not.exist')
+
+    // set other.tex as the main document
+    cy.findByRole('treeitem', { name: 'other.tex' }).click({ force: true })
+    cy.findByRole('treeitem', { name: 'other.tex' }).trigger('contextmenu')
+
+    cy.intercept('POST', '/project/123abc/settings', { statusCode: 204 }).as(
+      'update-settings'
+    )
+
+    cy.findByRole('menu')
+      .findByRole('menuitem', { name: 'Set as main document' })
+      .click()
+
+    cy.wait('@update-settings')
+      .its('request.body.rootDocId')
+      .should('eq', 'other-doc')
+
+    // main.tex is now not the main document
+    cy.findByRole('treeitem', { name: 'main.tex' }).trigger('contextmenu')
+    cy.findByRole('menu').findByRole('menuitem', {
+      name: 'Set as main document',
+    })
   })
 })

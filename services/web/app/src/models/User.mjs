@@ -59,17 +59,6 @@ export const UserSchema = new Schema(
     },
     isAdmin: { type: Boolean, default: false },
     adminRoles: { type: Array },
-    staffAccess: {
-      publisherMetrics: { type: Boolean, default: false },
-      publisherManagement: { type: Boolean, default: false },
-      institutionMetrics: { type: Boolean, default: false },
-      institutionManagement: { type: Boolean, default: false },
-      groupMetrics: { type: Boolean, default: false },
-      groupManagement: { type: Boolean, default: false },
-      adminMetrics: { type: Boolean, default: false },
-      splitTestMetrics: { type: Boolean, default: false },
-      splitTestManagement: { type: Boolean, default: false },
-    },
     signUpDate: {
       type: Date,
       default() {
@@ -89,6 +78,10 @@ export const UserSchema = new Schema(
       mode: { type: String, default: 'none' },
       theme: { type: String, default: 'textmate' },
       overallTheme: { type: String, default: '' },
+      // When overallTheme is `system`, we switch between `lightTheme` and `darkTheme` based on system settings
+      // When overallTheme is `light-` or empty, we use the `theme` option.
+      lightTheme: { type: String, default: 'textmate' },
+      darkTheme: { type: String, default: 'overleaf_dark' },
       fontSize: { type: Number, default: '12' },
       autoComplete: { type: Boolean, default: true },
       autoPairDelimiters: { type: Boolean, default: true },

@@ -1,15 +1,19 @@
 const { ParamsError } = require('./Errors')
 const { z } = require('zod')
 const { zz } = require('./zodHelpers')
-const { validateReq } = require('./validateReq')
+const { parseReq } = require('./parseReq')
 const { validateSchema } = require('./validateSchema')
-const { handleValidationError } = require('./handleValidationError')
+const {
+  handleValidationError,
+  createHandleValidationError,
+} = require('./handleValidationError')
 
 module.exports = {
   z,
   zz,
   validateSchema,
-  validateReq,
+  parseReq,
   handleValidationError,
+  createHandleValidationError,
   ParamsError,
 }

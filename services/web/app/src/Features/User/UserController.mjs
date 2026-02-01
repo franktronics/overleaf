@@ -8,7 +8,7 @@ import metrics from '@overleaf/metrics'
 import AuthenticationManager from '../Authentication/AuthenticationManager.mjs'
 import SessionManager from '../Authentication/SessionManager.mjs'
 import Features from '../../infrastructure/Features.mjs'
-import { z, validateReq } from '../../infrastructure/Validation.mjs'
+import { z, parseReq } from '../../infrastructure/Validation.mjs'
 import UserAuditLogHandler from './UserAuditLogHandler.mjs'
 import UserSessionsManager from './UserSessionsManager.mjs'
 import UserUpdater from './UserUpdater.mjs'
@@ -22,7 +22,6 @@ import { expressify } from '@overleaf/promise-utils'
 import { acceptsJson } from '../../infrastructure/RequestContentTypeDetection.mjs'
 import Modules from '../../infrastructure/Modules.mjs'
 import OneTimeTokenHandler from '../Security/OneTimeTokenHandler.mjs'
-import SplitTestHandler from '../SplitTests/SplitTestHandler.mjs'
 
 async function _sendSecurityAlertClearedSessions(user) {
   const emailOptions = {
@@ -341,7 +340,7 @@ const updateUserSettingsSchema = z.object({
 })
 
 async function updateUserSettings(req, res, next) {
-  const { body } = validateReq(req, updateUserSettingsSchema)
+  const { body } = parseReq(req, updateUserSettingsSchema)
   const userId = SessionManager.getLoggedInUserId(req.session)
   req.logger.addFields({ userId })
 
@@ -367,6 +366,12 @@ async function updateUserSettings(req, res, next) {
   }
   if (body.editorTheme != null) {
     user.ace.theme = body.editorTheme
+  }
+  if (body.editorLightTheme != null) {
+    user.ace.lightTheme = body.editorLightTheme
+  }
+  if (body.editorDarkTheme != null) {
+    user.ace.darkTheme = body.editorDarkTheme
   }
   if (body.overallTheme != null) {
     user.ace.overallTheme = body.overallTheme
@@ -406,18 +411,7 @@ async function updateUserSettings(req, res, next) {
     user.ace.referencesSearchMode = mode
   }
   if (body.enableNewEditor != null) {
-    const assignment = await SplitTestHandler.promises.getAssignment(
-      req,
-      res,
-      'editor-redesign-opt-out'
-    )
-    const isOptOutStageEnabled = assignment.variant === 'enabled'
-
-    if (isOptOutStageEnabled) {
-      user.ace.enableNewEditorStageFour = Boolean(body.enableNewEditor)
-    } else {
-      user.ace.enableNewEditor = Boolean(body.enableNewEditor)
-    }
+    user.ace.enableNewEditorStageFour = Boolean(body.enableNewEditor)
   }
   if (body.darkModePdf != null) {
     user.ace.darkModePdf = Boolean(body.darkModePdf)

@@ -42,7 +42,7 @@ export async function createGroupSSO(
   const nonSSOMember = nonSSOMemberHelper.user
 
   const groupAdminUser = new User()
-  const memberUser = new User()
+  const memberUser = new User({ confirmedAt: new Date() })
 
   await groupAdminUser.ensureUserExists()
   await memberUser.ensureUserExists()
@@ -71,6 +71,7 @@ export async function createGroupSSO(
     },
     ssoConfig: ssoConfig._id,
     membersLimit: 10,
+    teamName: 'Test Team',
   })
   await subscription.ensureExists()
   const subscriptionId = subscription._id.toString()

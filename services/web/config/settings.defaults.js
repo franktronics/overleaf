@@ -92,7 +92,6 @@ const httpPermissionsPolicy = {
     'idle-detection',
     'local-fonts',
     'magnetometer',
-    'microphone',
     'midi',
     'otp-credentials',
     'payment',
@@ -107,6 +106,7 @@ const httpPermissionsPolicy = {
   allowed: {
     autoplay: 'self "https://videos.ctfassets.net"',
     fullscreen: 'self',
+    'on-device-speech-recognition': 'self',
   },
 }
 
@@ -268,7 +268,7 @@ module.exports = {
       url: `http://${process.env.WEBPACK_HOST || '127.0.0.1'}:3808`,
     },
     wiki: {
-      url: process.env.WIKI_URL || 'https://learn.sharelatex.com',
+      url: process.env.WIKI_URL || 'https://learnwiki.overleaf.com',
       maxCacheAge: parseInt(process.env.WIKI_MAX_CACHE_AGE || 5 * minutes, 10),
     },
 
@@ -703,10 +703,6 @@ module.exports = {
   // By default turn on feature flag, can be overridden per request.
   enablePdfCaching: process.env.ENABLE_PDF_CACHING === 'true',
 
-  pdfCachingMinChunkSize: 7500,
-  pdfCaching: true,
-  cachedUrlLookupEnabled: true,
-
   // Maximum size of text documents in the real-time editing system.
   max_doc_length: 2 * 1024 * 1024, // 2mb
 
@@ -1012,12 +1008,14 @@ module.exports = {
     importProjectFromGithubMenu: [],
     editorLeftMenuSync: [],
     editorLeftMenuManageTemplate: [],
+    menubarExtraComponents: [],
     oauth2Server: [],
     managedGroupSubscriptionEnrollmentNotification: [],
     managedGroupEnrollmentInvite: [],
     ssoCertificateInfo: [],
     v1ImportDataScreen: [],
     snapshotUtils: [],
+    visualEditorProviders: [],
     usGovBanner: [],
     rollingBuildsUpdatedAlert: [],
     offlineModeToolbarButtons: [],
@@ -1042,12 +1040,18 @@ module.exports = {
         '../modules/full-project-search/frontend/js/components/full-project-search-button.tsx'
       ),
     ],
-    fullProjectSearchPanel: [],
+    fullProjectSearchPanel: [
+      Path.resolve(
+        __dirname,
+        '../modules/full-project-search/frontend/js/components/full-project-search.tsx'
+      ),
+    ],
     integrationPanelComponents: [],
     referenceSearchSetting: [],
     errorLogsComponents: [],
     referenceIndices: [],
     railEntries: [],
+    railPopovers: [],
   },
 
   moduleImportSequence: [

@@ -8,13 +8,14 @@ import {
   useState,
 } from 'react'
 
-export type NewEditorTourStage = 'rail' | 'logs' | 'theme' | 'switch-back'
+export type NewEditorTourStage = 'rail' | 'logs' | 'theme' | 'got-questions'
 
 const NewEditorTourContext = createContext<
   | {
       stage: NewEditorTourStage
       stageNumber: number
       totalStages: number
+      isShowing: boolean
       shouldShowTourStage: (tourStage: NewEditorTourStage) => boolean
       startTour: () => void
       goToNextStage: () => void
@@ -24,11 +25,11 @@ const NewEditorTourContext = createContext<
   | undefined
 >(undefined)
 
-const STAGES: NewEditorTourStage[] = ['rail', 'logs', 'theme', 'switch-back']
+const STAGES: NewEditorTourStage[] = ['rail', 'logs', 'theme', 'got-questions']
 const EDITOR_ONLY_STAGES: NewEditorTourStage[] = [
   'rail',
   'theme',
-  'switch-back',
+  'got-questions',
 ]
 
 export const NewEditorTourProvider: FC<React.PropsWithChildren> = ({
@@ -83,6 +84,7 @@ export const NewEditorTourProvider: FC<React.PropsWithChildren> = ({
       goToNextStage,
       finishTour,
       dismissTour,
+      isShowing: showTour,
     }),
     [
       stage,
@@ -93,6 +95,7 @@ export const NewEditorTourProvider: FC<React.PropsWithChildren> = ({
       goToNextStage,
       finishTour,
       dismissTour,
+      showTour,
     ]
   )
 

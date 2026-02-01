@@ -1,14 +1,14 @@
 const { defineConfig } = require('vitest/config')
 
 let reporterOptions = {}
-if (process.env.CI && process.env.MOCHA_ROOT_SUITE_NAME) {
+if (process.env.CI && process.env.JUNIT_ROOT_SUITE_NAME) {
   reporterOptions = {
     reporters: [
       'default',
       [
         'junit',
         {
-          classnameTemplate: `${process.env.MOCHA_ROOT_SUITE_NAME}.{filename}`,
+          classnameTemplate: `${process.env.JUNIT_ROOT_SUITE_NAME}.{filename}`,
         },
       ],
     ],
@@ -30,6 +30,9 @@ module.exports = defineConfig({
             'modules/*/test/unit/**/*.test.mjs',
             'test/unit/src/**/*.test.mjs',
           ],
+          sequence: {
+            groupOrder: 2,
+          },
           exclude: ['**/*.sequential.test.mjs'],
           fileParallelism: true,
         },
@@ -38,6 +41,9 @@ module.exports = defineConfig({
         extends: true,
         test: {
           name: 'Sequential',
+          sequence: {
+            groupOrder: 1,
+          },
           include: [
             'modules/*/test/unit/**/*.sequential.test.mjs',
             'test/unit/src/**/*.sequential.test.mjs',
