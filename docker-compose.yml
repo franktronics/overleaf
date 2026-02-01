@@ -24,7 +24,6 @@ services:
             OVERLEAF_SITE_URL: https://overleaf.tenepo.com
             OVERLEAF_NAV_TITLE: Overleaf CE Wilson
             OVERLEAF_ADMIN_EMAIL: contact@franklin-tenepo.com
-        entrypoint: /bin/bash -c "tlmgr update --self && tlmgr install scheme-full && exec /sbin/my_init"
         networks:
             - default
             - dokploy-network
