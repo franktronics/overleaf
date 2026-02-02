@@ -16,6 +16,7 @@ services:
         environment:
             OVERLEAF_APP_NAME: Overleaf CE Wilson
             OVERLEAF_MONGO_URL: mongodb://mongo/sharelatex
+            OVERLEAF_BEHIND_PROXY: 'true'
             OVERLEAF_REDIS_HOST: redis
             REDIS_HOST: redis
             ENABLED_LINKED_FILE_TYPES: 'project_file,project_output_file'
