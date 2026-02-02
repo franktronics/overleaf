@@ -13,7 +13,7 @@ services:
         stop_grace_period: 60s
         volumes:
             - ../files/sharelatex_data:/var/lib/overleaf
-            - ../files/texlive_data:/usr/local/texlive
+            #- ../files/texlive_data:/usr/local/texlive
         environment:
             OVERLEAF_APP_NAME: Overleaf CE Wilson
             OVERLEAF_MONGO_URL: mongodb://mongo/sharelatex
